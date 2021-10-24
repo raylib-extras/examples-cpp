@@ -67,14 +67,18 @@ public:
 		}
 	}
 
+	Rectangle GetScreenRect()
+	{
+		return Rectangle{ Position.x , Position.y, (float)CardBack.width, (float)CardBack.height };
+	}
+
 	void Draw()
 	{
 		if (FaceUp)
 		{
-			Rectangle baseRect = Rectangle{ Position.x-2 , Position.y-2, (float)CardBack.width+2, (float)CardBack.height+2 };
+			Rectangle baseRect = Rectangle{ Position.x-1 , Position.y-1, (float)CardBack.width+2, (float)CardBack.height+2 };
 			DrawRectangleRec(baseRect, BLACK);
-			baseRect = Rectangle{ Position.x , Position.y, (float)CardBack.width, (float)CardBack.height};
-			DrawRectangleRec(baseRect, RAYWHITE);
+			DrawRectangleRec(GetScreenRect(), RAYWHITE);
 
 			Vector2 center = { Position.x + CardBack.width / 2, Position.y + CardBack.height / 2 };
 
@@ -98,7 +102,7 @@ public:
 
 	bool PointIn(const Vector2& pos)
 	{
-		return CheckCollisionPointRec(pos, Rectangle{ Position.x , Position.y, (float)CardBack.width, (float)CardBack.height });
+		return CheckCollisionPointRec(pos, GetScreenRect());
 	}
 };
 
@@ -213,16 +217,16 @@ public:
 		SelectedCard = card;
 
 		// make it look like we picked up the card
-		SelectedCard->Position.x -= 3;
-		SelectedCard->Position.y -= 3;
+		SelectedCard->Position.x -= 5;
+		SelectedCard->Position.y -= 5;
 	}
 
 	void Deselect()
 	{
 		if (SelectedCard != nullptr)
 		{
-			SelectedCard->Position.x += 4;
-			SelectedCard->Position.y += 4;
+			SelectedCard->Position.x += 10;
+			SelectedCard->Position.y += 10;
 		}
 		SelectedCard = nullptr;
 	}
@@ -230,7 +234,22 @@ public:
 	void Draw()
 	{
 		for (Card* card : Cards)
-			card->Draw();
+		{
+			if (card != SelectedCard)
+				card->Draw();
+		}
+
+		if (SelectedCard != nullptr)
+		{
+
+			Rectangle shadow = SelectedCard->GetScreenRect();
+			shadow.x += 10;
+			shadow.y += 10;
+
+			DrawRectangleRec(shadow, ColorAlpha(BLACK, 0.5f));
+
+			SelectedCard->Draw();
+		}
 	}
 };
 
