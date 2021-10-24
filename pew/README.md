@@ -8,3 +8,5 @@ Every 10 targets destoryed adds a new one.
 You have 3 lives
 
 Code shows how to use math to convert angles into vectors and apply those vectors to motion, using frame rate independent speeds.
+
+![pew_game](https://user-images.githubusercontent.com/322174/138608560-47de649e-7316-42f3-a4f5-c8ba59ef8b98.gif)
