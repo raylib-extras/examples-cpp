@@ -99,7 +99,7 @@ public:
 
 		Lifetime = 0;
 		Size = 1;
-		Speed = GetRandomValue(50, 150);
+		Speed = (float)GetRandomValue(50, 150);
 	}
 
 	inline void Update()
@@ -129,10 +129,10 @@ public:
 
 	inline void Draw()
 	{
-		DrawCircle(Pos.x, Pos.y, Size, RED);
-		DrawCircle(Pos.x, Pos.y, Size * 0.75f, WHITE);
-		DrawCircle(Pos.x, Pos.y, Size * 0.5f, RED);
-		DrawCircle(Pos.x, Pos.y, Size * 0.25, WHITE);
+		DrawCircle((int)Pos.x, (int)Pos.y, Size, RED);
+		DrawCircle((int)Pos.x, (int)Pos.y, Size * 0.75f, WHITE);
+		DrawCircle((int)Pos.x, (int)Pos.y, Size * 0.5f, RED);
+		DrawCircle((int)Pos.x, (int)Pos.y, Size * 0.25f, WHITE);
 	}
 };
 
@@ -320,7 +320,7 @@ void main()
 			{
 				for (auto& target : targets)
 				{
-					if (target.Hit(itr->Pos, itr->Size*2))
+					if (target.Hit(itr->Pos, itr->Size*2.0f))
 					{
 						itr->Lifetime = 0;
 						score++;
@@ -347,7 +347,7 @@ void main()
 		{
 			DrawRectanglePro(Rectangle{ PlayerPos.x, PlayerPos.y,40,30 }, Vector2{ 20,15 }, PlayerAngle, DARKGRAY);
 
-			DrawCircle((int)PlayerPos.x + movementVector.x * 15, (int)PlayerPos.y + movementVector.y * 15, 7, GRAY);
+			DrawCircle((int)(PlayerPos.x + movementVector.x * 15), (int)(PlayerPos.y + movementVector.y * 15), 7, GRAY);
 
 			DrawCircle((int)PlayerPos.x, (int)PlayerPos.y, 10, BLUE);
 
