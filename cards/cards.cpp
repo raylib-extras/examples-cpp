@@ -40,8 +40,6 @@ enum class CardSuit
 {
 	Circle,
 	Square,
-	Diamond,
-	Cross,
 };
 
 // represents a single unique card
@@ -76,6 +74,7 @@ public:
 	{
 		if (FaceUp)
 		{
+			// draw the card face with an outline
 			Rectangle baseRect = Rectangle{ Position.x-1 , Position.y-1, (float)CardBack.width+2, (float)CardBack.height+2 };
 			DrawRectangleRec(baseRect, BLACK);
 			DrawRectangleRec(GetScreenRect(), RAYWHITE);
@@ -96,6 +95,7 @@ public:
 		}
 		else
 		{
+			// draw the card back
 			DrawTexture(CardBack, (int)Position.x, (int)Position.y, WHITE);
 		}
 	}
@@ -114,6 +114,7 @@ public:
 
 	Deck()
 	{
+		// build up 20 cards of each suit
 		for (int i = 0; i < 20; i++)
 		{
 			Cards.emplace_back(Card{ Vector2Zero(),CardSuit::Circle,i + 1, false });
@@ -126,6 +127,7 @@ public:
 class Stack
 {
 public:
+	// where the stack origin is on screen
 	Vector2 Pos = { 0 };
 
 	std::vector<Card*> Cards;
@@ -137,6 +139,7 @@ public:
 			Cards.push_back(&card);
 	}
 
+	// swaps the location of two cards
 	void Swap(size_t a, size_t b)
 	{
 		Card* t = Cards[a];
@@ -144,6 +147,7 @@ public:
 		Cards[b] = t;
 	}
 
+	// swaps random cards for factor * card count to try and shuffle the stack.
 	void Shuffle( size_t factor = 4)
 	{
 		size_t count = Cards.size() * factor;
@@ -157,7 +161,7 @@ public:
 		}
 	}
 
-	Card* PeekTop()
+	Card* Top()
 	{
 		Card* topCard = nullptr;
 		if (!Cards.empty())
@@ -179,16 +183,30 @@ public:
 
 	void Draw()
 	{
-		Card* topCard = PeekTop();
-
 		Rectangle baseRect = Rectangle{ Pos.x,Pos.y, (float)CardBack.width, (float)CardBack.height };
 
+		// draw a gray rectangle where this stack is
 		DrawRectangleRec(baseRect, DARKGRAY);
+
+
+		// draw a fake 'card' for every 10 cards in the stack
+		int stackHeight = (int)Cards.size() / 10;
+		stackHeight *= 3;
+
+		for (int i = 3; i < stackHeight; i += 3)
+		{
+			baseRect.x -= 3;
+			baseRect.y -= 3;
+			DrawRectangleRec(baseRect, (i % 6) == 0 ? DARKGRAY : GRAY );
+		}
+
+		// draw the top card
+		Card* topCard = Top();
 
 		if (topCard != nullptr)
 		{
-			topCard->Position.x = baseRect.x + 6;
-			topCard->Position.y = baseRect.y - 6;
+			topCard->Position.x = baseRect.x - 3;
+			topCard->Position.y = baseRect.y - 3;
 			topCard->Draw();
 		}
 	}
@@ -225,6 +243,7 @@ public:
 	{
 		if (SelectedCard != nullptr)
 		{
+			// make it look like we dropped the card
 			SelectedCard->Position.x += 10;
 			SelectedCard->Position.y += 10;
 		}
@@ -241,7 +260,7 @@ public:
 
 		if (SelectedCard != nullptr)
 		{
-
+			// draw a shadow below the card
 			Rectangle shadow = SelectedCard->GetScreenRect();
 			shadow.x += 10;
 			shadow.y += 10;
@@ -263,13 +282,15 @@ void main()
 	CardBack = LoadTextureFromImage(img);
 	UnloadImage(img);
 
+	// all the cards in the game
 	Deck cards;
 
-	Stack DrawDeck{ 30,20 };
-
+	// the deck of cards we can pull from
+	Stack DrawDeck{ 30, 20 };
 	DrawDeck.FromDeck(cards);
 	DrawDeck.Shuffle();
 
+	// the cards we have pulled
 	Hand PlayerHand;
 
 	while (!WindowShouldClose())
@@ -294,6 +315,7 @@ void main()
 			{
 				if (card->PointIn(GetMousePosition()))
 				{
+					// activate this card so we can start dragging it.
 					PlayerHand.Select(card);
 					break;
 				}
@@ -303,7 +325,7 @@ void main()
 		// check to see if we are interacting with the draw deck
 		if (!handled)
 		{
-			Card* deckTop = DrawDeck.PeekTop();
+			Card* deckTop = DrawDeck.Top();
 			if (deckTop != nullptr)
 			{
 				if (deckTop->PointIn(GetMousePosition()))
@@ -318,12 +340,11 @@ void main()
 						// take the card into a hand and start dragging it.
 						PlayerHand.AddCard(DrawDeck.PopTop());
 
-						// always look at drawn cards
+						// always show the face of drawn cards
 						PlayerHand.SelectedCard->FaceUp = true;
 					}
 				}
 			}
-			
 		}
 
 		BeginDrawing();
