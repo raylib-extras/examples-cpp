@@ -14,19 +14,20 @@ class LightInfo
 public:
 	Vector2 Position = { 0,0 };
 
-	RenderTexture LightTexture;
 	RenderTexture LightMask;
+
+	bool Valid = false;
 
 	LightInfo()
 	{
-		LightTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		UpdateLightMask();
 	}
 
 	LightInfo(const Vector2& pos)
 	{
-		LightTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		UpdateLightMask();
 		Position = pos;
 	}
 
@@ -76,7 +77,8 @@ public:
  		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
  		rlSetBlendMode(BLEND_CUSTOM);
 
-		DrawCircleGradient(Position.x, Position.y, OuterRadius, ColorAlpha(WHITE,0), WHITE);
+		if (Valid)
+			DrawCircleGradient(Position.x, Position.y, OuterRadius, ColorAlpha(WHITE,0), WHITE);
 		rlDrawRenderBatchActive();
 		rlSetBlendMode(BLEND_ALPHA);
 
@@ -100,6 +102,7 @@ public:
 		if (!Dirty)
 			return;
 
+		Dirty = false;
 		Bounds.x = Position.x - OuterRadius;
 		Bounds.y = Position.y - OuterRadius;
 		Bounds.width = OuterRadius * 2;
@@ -142,8 +145,10 @@ public:
 				ShadowEdge(sp, ep);
 		}
 
+		Valid = true;
 		UpdateLightMask();
 	}
+
 
 	float OuterRadius = 300;
 	Rectangle Bounds = { -150,-150,300,300 };
@@ -183,7 +188,6 @@ int main()
 	Lights.emplace_back();
 	Lights[0].Move(Vector2{ 600, 400 });
 
-
 	Image img = GenImageChecked(64, 64, 32, 32, DARKBROWN, DARKGRAY);
 	Texture2D tile = LoadTextureFromImage(img);
 	UnloadImage(img);
@@ -200,24 +204,37 @@ int main()
 		if (IsKeyPressed(KEY_F1))
 			showLines = !showLines;
 
+		bool dirtyLights = false;
 		for (auto& light : Lights)
+		{
+			if (light.Dirty)
+				dirtyLights = true;
+
 			light.Update(Boxes);
+		}
 
-		// build up the light mask
-		BeginTextureMode(LightMask);
-		ClearBackground(BLACK);
+		// update the light mask
+		if (dirtyLights)
+		{
+			// build up the light mask
+			BeginTextureMode(LightMask);
+			ClearBackground(BLACK);
 
-		// force the blend mode to only set the alpha of the destination
-		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
-		rlSetBlendMode(BLEND_CUSTOM);
+			// force the blend mode to only set the alpha of the destination
+			rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
+			rlSetBlendMode(BLEND_CUSTOM);
 
-		for (auto& light : Lights)
-			DrawTextureRec(light.LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
+			for (auto& light : Lights)
+			{
+				//	if (light.Valid)
+				DrawTextureRec(light.LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
+			}
 
-		rlDrawRenderBatchActive();
-		// go back to normal
-		rlSetBlendMode(BLEND_ALPHA);
-		EndTextureMode();
+			rlDrawRenderBatchActive();
+			// go back to normal
+			rlSetBlendMode(BLEND_ALPHA);
+			EndTextureMode();
+		}
 
 		BeginDrawing();
 		ClearBackground(BLACK);
@@ -256,7 +273,7 @@ int main()
 		}
 
 		DrawFPS(1200, 0);
-		DrawText(TextFormat("Light 1 Shadows %d", (int)Lights[0].Shadows.size()), 1150, 20, 20, GREEN);
+		DrawText(TextFormat("Lights %d", (int)Lights.size()), 1050, 20, 20, GREEN);
 
 		EndDrawing();
 	}
