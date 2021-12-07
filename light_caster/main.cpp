@@ -5,7 +5,7 @@
 // constants from OpenGL
 #define GL_SRC_ALPHA 0x0302
 #define GL_MIN 0x8007
-
+#define GL_MAX 0x8008
 
 #include <vector>
 
@@ -15,10 +15,19 @@ public:
 	Vector2 Position = { 0,0 };
 
 	RenderTexture LightTexture;
+	RenderTexture LightMask;
 
 	LightInfo()
 	{
 		LightTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+	}
+
+	LightInfo(const Vector2& pos)
+	{
+		LightTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		Position = pos;
 	}
 
 	void Move(const Vector2& position)
@@ -57,26 +66,31 @@ public:
 		Shadows.push_back(polygon);
 	}
 
-	void UpdateLightTexture()
+	void UpdateLightMask()
 	{
-		BeginTextureMode(LightTexture);
+		BeginTextureMode(LightMask);
 
-		ClearBackground(BLACK);
+		ClearBackground(WHITE);
 
-		float flicker = 0;// GetRandomValue(0, 3) / 100.0f;
-		DrawCircleGradient(Position.x, Position.y, OuterRadius, ColorAlpha(WHITE, 0.85f + flicker), BLANK);
+ 		// force the blend mode to only set the alpha of the destination
+ 		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
+ 		rlSetBlendMode(BLEND_CUSTOM);
 
-		// force the blend mode to only set the alpha of the destination
-		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
-		rlSetBlendMode(BLEND_CUSTOM);
-
-		// go back to normal
+		DrawCircleGradient(Position.x, Position.y, OuterRadius, ColorAlpha(WHITE,0), WHITE);
+		rlDrawRenderBatchActive();
 		rlSetBlendMode(BLEND_ALPHA);
+
+		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MAX);
+		rlSetBlendMode(BLEND_CUSTOM);
 
 		for (std::vector<Vector2> shadow : Shadows)
 		{
-			DrawTriangleFan(&shadow[0], 4, ColorAlpha(BLACK, 1));
+			DrawTriangleFan(&shadow[0], 4, WHITE);
 		}
+
+		rlDrawRenderBatchActive();
+		// go back to normal
+		rlSetBlendMode(BLEND_ALPHA);
 
 		EndTextureMode();
 	}
@@ -127,8 +141,8 @@ public:
 			if (Position.x < ep.x)
 				ShadowEdge(sp, ep);
 		}
-			
-		UpdateLightTexture();
+
+		UpdateLightMask();
 	}
 
 	float OuterRadius = 300;
@@ -162,8 +176,13 @@ int main()
 //	SetTargetFPS(144);
 	SetupBoxes();
 
-	LightInfo light1;
-	light1.Move(Vector2{ 600, 400 });
+	RenderTexture LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+
+	std::vector<LightInfo> Lights;
+
+	Lights.emplace_back();
+	Lights[0].Move(Vector2{ 600, 400 });
+
 
 	Image img = GenImageChecked(64, 64, 32, 32, DARKBROWN, DARKGRAY);
 	Texture2D tile = LoadTextureFromImage(img);
@@ -173,32 +192,53 @@ int main()
 	while (!WindowShouldClose())
 	{
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-			light1.Move(GetMousePosition());
+			Lights[0].Move(GetMousePosition());
+
+		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+			Lights.emplace_back(GetMousePosition());
 
 		if (IsKeyPressed(KEY_F1))
 			showLines = !showLines;
 
-		light1.Update(Boxes);
+		for (auto& light : Lights)
+			light.Update(Boxes);
+
+		// build up the light mask
+		BeginTextureMode(LightMask);
+		ClearBackground(BLACK);
+
+		// force the blend mode to only set the alpha of the destination
+		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
+		rlSetBlendMode(BLEND_CUSTOM);
+
+		for (auto& light : Lights)
+			DrawTextureRec(light.LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
+
+		rlDrawRenderBatchActive();
+		// go back to normal
+		rlSetBlendMode(BLEND_ALPHA);
+		EndTextureMode();
 
 		BeginDrawing();
 		ClearBackground(BLACK);
 
 		DrawTextureRec(tile, Rectangle{ 0,0,(float)GetScreenWidth(),(float)GetScreenHeight() }, Vector2Zero(), WHITE);
 
-		DrawTextureRec(light1.LightTexture.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), ColorAlpha(WHITE, showLines ? 0.75f : 1.0f));
+		DrawTextureRec(LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), ColorAlpha(WHITE, showLines ? 0.75f : 1.0f));
 
-		DrawCircle(int(light1.Position.x), int(light1.Position.y), 10, YELLOW);
+		for (auto& light : Lights)
+			DrawCircle(int(light.Position.x), int(light.Position.y), 10, YELLOW);
 
 		if (showLines)
 		{
-			for (std::vector<Vector2> shadow : light1.Shadows)
+			for (std::vector<Vector2> shadow : Lights[0].Shadows)
 			{
 				DrawTriangleFan(&shadow[0], 4, DARKPURPLE);
 			}
 
 			for (const auto& box : Boxes)
 			{
-				if (light1.BoxInLight(box))
+				if (Lights[0].BoxInLight(box))
 					DrawRectangleRec(box, PURPLE);
 			}
 
@@ -216,7 +256,7 @@ int main()
 		}
 
 		DrawFPS(1200, 0);
-		DrawText(TextFormat("Shadows %d", (int)light1.Shadows.size()), 1150, 20, 20, GREEN);
+		DrawText(TextFormat("Light 1 Shadows %d", (int)Lights[0].Shadows.size()), 1150, 20, 20, GREEN);
 
 		EndDrawing();
 	}
