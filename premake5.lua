@@ -38,8 +38,6 @@ workspace "Examples-CPP"
 		
 	targetdir "bin/%{cfg.buildcfg}/"
 	
-	platform_defines()
-	
 project "raylib"
 		filter "configurations:Debug.DLL OR Release.DLL"
 			kind "SharedLib"
@@ -57,6 +55,8 @@ project "raylib"
 			
 		filter{}
 		
+		platform_defines()
+
 		location "build"
 		language "C++"
 		targetdir "bin/%{cfg.buildcfg}"
@@ -77,6 +77,7 @@ project "Pew"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
+	platform_defines()
 	includedirs {"src"}
 	vpaths 
 	{
@@ -106,6 +107,7 @@ project "Cards"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
+	platform_defines()
 	includedirs {"src"}
 	vpaths 
 	{
@@ -117,6 +119,36 @@ project "Cards"
 	links {"raylib"}
 	
 	includedirs { "cards", "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
+		dependson {"raylib"}
+		links {"raylib.lib", "winmm", "kernel32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "action:gmake*"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+		
+project "LightCaster"
+	kind "ConsoleApp"
+	location "light_caster"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	platform_defines()	
+	includedirs {"src"}
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {"light_caster/**.c", "light_caster/**.cpp", "light_caster/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { "light_caster", "raylib/src" }
 	platform_defines()
 	
 	filter "action:vs*"
