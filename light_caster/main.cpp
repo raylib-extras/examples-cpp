@@ -9,6 +9,46 @@
 
 #include <vector>
 
+
+// Draw a gradient-filled circle
+// NOTE: Gradient goes from inner radius (color1) to border (color2)
+void DrawLightGradient(int centerX, int centerY, float innerRadius, float outterRadius, Color color1, Color color2)
+{
+	rlCheckRenderBatchLimit(3 * 3 * 36);
+
+	if (innerRadius == 0)
+	{
+		DrawCircleGradient(centerX, centerY, outterRadius, color1, color2);
+		return;
+	}
+
+	rlBegin(RL_TRIANGLES);
+	for (int i = 0; i < 360; i += 10)
+	{
+		// inner triangle at color1
+		rlColor4ub(color1.r, color1.g, color1.b, color1.a);
+		rlVertex2f((float)centerX, (float)centerY);
+		rlVertex2f((float)centerX + sinf(DEG2RAD * i) * innerRadius, (float)centerY + cosf(DEG2RAD * i) * innerRadius);
+		rlVertex2f((float)centerX + sinf(DEG2RAD * (i + 10)) * innerRadius, (float)centerY + cosf(DEG2RAD * (i + 10)) * innerRadius);
+
+		if (outterRadius > innerRadius)
+		{
+			rlVertex2f((float)centerX + sinf(DEG2RAD * (i + 10)) * innerRadius, (float)centerY + cosf(DEG2RAD * (i + 10)) * innerRadius);
+			rlVertex2f((float)centerX + sinf(DEG2RAD * i) * innerRadius, (float)centerY + cosf(DEG2RAD * i) * innerRadius);
+			rlColor4ub(color2.r, color2.g, color2.b, color2.a);
+			rlVertex2f((float)centerX + sinf(DEG2RAD * i) * outterRadius, (float)centerY + cosf(DEG2RAD * i) * outterRadius);
+
+			rlColor4ub(color1.r, color1.g, color1.b, color1.a);
+			rlVertex2f((float)centerX + sinf(DEG2RAD * (i + 10)) * innerRadius, (float)centerY + cosf(DEG2RAD * (i + 10)) * innerRadius);
+			rlColor4ub(color2.r, color2.g, color2.b, color2.a);
+			rlVertex2f((float)centerX + sinf(DEG2RAD * i) * outterRadius, (float)centerY + cosf(DEG2RAD * i) * outterRadius);
+			rlVertex2f((float)centerX + sinf(DEG2RAD * (i + 10)) * outterRadius, (float)centerY + cosf(DEG2RAD * (i + 10)) * outterRadius);
+		}
+
+	}
+	rlEnd();
+}
+
 class LightInfo
 {
 public:
@@ -50,7 +90,7 @@ public:
 
 	void ShadowEdge(const Vector2& sp, const Vector2& ep)
 	{
-		float extension = OuterRadius;
+		float extension = OuterRadius*2;
 
 		Vector2 spVector = Vector2Normalize(Vector2Subtract(sp, Position));
 		Vector2 spProjection = Vector2Add(sp, Vector2Scale(spVector, extension));
@@ -60,9 +100,9 @@ public:
 
 		std::vector<Vector2> polygon;
 		polygon.push_back(sp);
-		polygon.push_back(spProjection);
-		polygon.push_back(epProjection);
 		polygon.push_back(ep);
+		polygon.push_back(epProjection);
+		polygon.push_back(spProjection);
 
 		Shadows.push_back(polygon);
 	}
@@ -78,7 +118,7 @@ public:
  		rlSetBlendMode(BLEND_CUSTOM);
 
 		if (Valid)
-			DrawCircleGradient(Position.x, Position.y, OuterRadius, ColorAlpha(WHITE,0), WHITE);
+			DrawLightGradient(Position.x, Position.y, InnerRadius, OuterRadius, ColorAlpha(WHITE,0), WHITE);
 		rlDrawRenderBatchActive();
 		rlSetBlendMode(BLEND_ALPHA);
 
@@ -119,30 +159,42 @@ public:
 			if (!CheckCollisionRecs(box, Bounds))
 				continue;
 
+			// compute shadow volumes for the faces we are opposite to
 			// top
 			Vector2 sp = { box.x, box.y };
 			Vector2 ep = { box.x + box.width, box.y };
 
-			if (Position.y < ep.y)
+			if (Position.y > ep.y)
 				ShadowEdge(sp, ep);
 
 			// right
 			sp = ep;
 			ep.y += box.height;
-			if (Position.x > ep.x)
+			if (Position.x < ep.x)
 				ShadowEdge(sp, ep);
 
 			// bottom
 			sp = ep;
 			ep.x -= box.width;
-			if (Position.y > ep.y)
+			if (Position.y < ep.y)
 				ShadowEdge(sp, ep);
 
 			// left
 			sp = ep;
 			ep.y -= box.height;
-			if (Position.x < ep.x)
+			if (Position.x > ep.x)
 				ShadowEdge(sp, ep);
+
+
+			// add the actual box as a shadow to get the corner of it.
+			// If the map is going to draw the box, then don't do this
+			std::vector<Vector2> polygon;
+			polygon.emplace_back(Vector2{ box.x, box.y });
+			polygon.emplace_back(Vector2{ box.x, box.y + box.height });
+			polygon.emplace_back(Vector2{ box.x + box.width, box.y + box.height });
+			polygon.emplace_back(Vector2{ box.x + box.width, box.y });
+
+			Shadows.push_back(polygon);
 		}
 
 		Valid = true;
@@ -150,7 +202,8 @@ public:
 	}
 
 
-	float OuterRadius = 300;
+	float OuterRadius = 200;
+	float InnerRadius = 50;
 	Rectangle Bounds = { -150,-150,300,300 };
 
 	std::vector<std::vector<Vector2>> Shadows;
@@ -160,7 +213,18 @@ public:
 
 std::vector<Rectangle> Boxes;
 
-void SetupBoxes()
+Rectangle RandomBox()
+{
+	float x = GetRandomValue(0, GetScreenWidth());
+	float y = GetRandomValue(0, GetScreenHeight());
+
+	float w = GetRandomValue(10,100);
+	float h = GetRandomValue(10,100);
+
+	return Rectangle{ x,y,w,h };
+}
+
+void SetupBoxes(const Vector2& startPos)
 {
 	Boxes.emplace_back(Rectangle{ 50,50, 40, 40 });
 	Boxes.emplace_back(Rectangle{ 1200, 700, 40, 40 });
@@ -170,7 +234,11 @@ void SetupBoxes()
 
 	for (int i = 0; i < 50; i++)
 	{
-		Boxes.emplace_back(Rectangle{ (float)GetRandomValue(0,GetScreenWidth()), (float)GetRandomValue(0,GetScreenHeight()), (float)GetRandomValue(10,100), (float)GetRandomValue(10,100) });
+		Rectangle rect = RandomBox();
+		while (CheckCollisionPointRec(startPos,rect))
+			rect = RandomBox();
+
+		Boxes.emplace_back(rect);
 	}
 }
 
@@ -179,7 +247,7 @@ int main()
 	SetConfigFlags(/*FLAG_VSYNC_HINT ||*/ FLAG_MSAA_4X_HINT);
 	InitWindow(1280, 800, "LightCaster");
 //	SetTargetFPS(144);
-	SetupBoxes();
+
 
 	RenderTexture LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
@@ -187,6 +255,8 @@ int main()
 
 	Lights.emplace_back();
 	Lights[0].Move(Vector2{ 600, 400 });
+
+	SetupBoxes(Lights[0].Position);
 
 	Image img = GenImageChecked(64, 64, 32, 32, DARKBROWN, DARKGRAY);
 	Texture2D tile = LoadTextureFromImage(img);
@@ -200,6 +270,15 @@ int main()
 
 		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
 			Lights.emplace_back(GetMousePosition());
+
+		float delta = GetMouseWheelMove();
+		if (delta != 0)
+		{
+			float newRad = Lights[0].OuterRadius;
+			newRad += delta * 10;
+			if (newRad > Lights[0].InnerRadius)
+				Lights[0].SetRadius(newRad);
+		}
 
 		if (IsKeyPressed(KEY_F1))
 			showLines = !showLines;
