@@ -15,7 +15,7 @@ end
 
 workspace "Examples-CPP"
 	configurations { "Debug","Debug.DLL", "Release", "Release.DLL" }
-	platforms { "x64"}
+	platforms { "x64", "x86"}
 
 	filter "configurations:Debug"
 		defines { "DEBUG" }
@@ -38,8 +38,6 @@ workspace "Examples-CPP"
 		
 	targetdir "bin/%{cfg.buildcfg}/"
 	
-	platform_defines()
-	
 project "raylib"
 		filter "configurations:Debug.DLL OR Release.DLL"
 			kind "SharedLib"
@@ -48,19 +46,19 @@ project "raylib"
 		filter "configurations:Debug OR Release"
 			kind "StaticLib"
 			
-		filter "action:vs*"
+		filter "system:windows"
 			defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
-			links {"winmm"}
+			links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
 			
-		filter "action:gmake*"
+		filter "system:linux"
 			links {"pthread", "GL", "m", "dl", "rt", "X11"}
 			
 		filter{}
-		
+		platform_defines()
+
 		location "build"
-		language "C++"
+		language "C"
 		targetdir "bin/%{cfg.buildcfg}"
-		cppdialect "C++17"
 		
 		includedirs { "raylib/src", "raylib/src/external/glfw/include"}
 		vpaths 
@@ -77,6 +75,7 @@ project "Pew"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
+	platform_defines()
 	includedirs {"src"}
 	vpaths 
 	{
@@ -91,12 +90,17 @@ project "Pew"
 	platform_defines()
 	
 	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
 		dependson {"raylib"}
-		links {"raylib.lib", "winmm", "kernel32"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
 		libdirs {"bin/%{cfg.buildcfg}"}
 		
-	filter "action:gmake*"
+	filter "system:linux"
 		links {"pthread", "GL", "m", "dl", "rt", "X11"}
 		
 project "Cards"
@@ -106,6 +110,7 @@ project "Cards"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
+	platform_defines()
 	includedirs {"src"}
 	vpaths 
 	{
@@ -118,12 +123,87 @@ project "Cards"
 	
 	includedirs { "cards", "raylib/src" }
 	platform_defines()
-	
+		
 	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
 		dependson {"raylib"}
-		links {"raylib.lib", "winmm", "kernel32"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
 		libdirs {"bin/%{cfg.buildcfg}"}
 		
-	filter "action:gmake*"
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+		
+project "LightCaster"
+	kind "ConsoleApp"
+	location "light_caster"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	platform_defines()	
+	includedirs {"src"}
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {"light_caster/**.c", "light_caster/**.cpp", "light_caster/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { "light_caster", "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+		dependson {"raylib"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+		
+project "StencilReflection"
+	kind "ConsoleApp"
+	location "light_caster"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	platform_defines()	
+	includedirs {"src"}
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {"stencil_reflection/**.c", "stencil_reflection/**.cpp", "stencil_reflection/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { "stencil_reflection", "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+		dependson {"raylib"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "system:linux"
 		links {"pthread", "GL", "m", "dl", "rt", "X11"}
