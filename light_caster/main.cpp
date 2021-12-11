@@ -54,19 +54,25 @@ class LightInfo
 public:
 	Vector2 Position = { 0,0 };
 
-	RenderTexture LightMask;
+	RenderTexture ShadowMask;
+	RenderTexture GlowTexture;
 
 	bool Valid = false;
 
+	bool HasColor = false;
+	Color LightColor = WHITE;
+
 	LightInfo()
 	{
-		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		ShadowMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		GlowTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 		UpdateLightMask();
 	}
 
 	LightInfo(const Vector2& pos)
 	{
-		LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		ShadowMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+		GlowTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 		UpdateLightMask();
 		Position = pos;
 	}
@@ -81,6 +87,12 @@ public:
 	{
 		OuterRadius = outerRadius;
 		Dirty = true;
+	}
+
+	void SetColor(Color color)
+	{
+		HasColor = true;
+		LightColor = color;
 	}
 
 	bool BoxInLight(const Rectangle& box)
@@ -109,7 +121,7 @@ public:
 
 	void UpdateLightMask()
 	{
-		BeginTextureMode(LightMask);
+		BeginTextureMode(ShadowMask);
 
 		ClearBackground(WHITE);
 
@@ -128,6 +140,26 @@ public:
 		for (std::vector<Vector2> shadow : Shadows)
 		{
 			DrawTriangleFan(&shadow[0], 4, WHITE);
+		}
+
+		rlDrawRenderBatchActive();
+		// go back to normal
+		rlSetBlendMode(BLEND_ALPHA);
+
+		EndTextureMode();
+
+		BeginTextureMode(GlowTexture);
+		ClearBackground(BLANK);
+		if (Valid)
+			DrawLightGradient(Position.x, Position.y, InnerRadius, OuterRadius, ColorAlpha(LightColor, 0.75f), ColorAlpha(LightColor, 0));
+		rlDrawRenderBatchActive();
+
+		rlSetBlendFactors(GL_SRC_ALPHA, GL_SRC_ALPHA, GL_MIN);
+		rlSetBlendMode(BLEND_CUSTOM);
+
+		for (std::vector<Vector2> shadow : Shadows)
+		{
+			DrawTriangleFan(&shadow[0], 4, BLANK);
 		}
 
 		rlDrawRenderBatchActive();
@@ -184,7 +216,6 @@ public:
 			ep.y -= box.height;
 			if (Position.x > ep.x)
 				ShadowEdge(sp, ep);
-
 
 			// add the actual box as a shadow to get the corner of it.
 			// If the map is going to draw the box, then don't do this
@@ -248,7 +279,6 @@ int main()
 	InitWindow(1280, 800, "LightCaster");
 //	SetTargetFPS(144);
 
-
 	RenderTexture LightMask = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
 	std::vector<LightInfo> Lights;
@@ -258,7 +288,7 @@ int main()
 
 	SetupBoxes(Lights[0].Position);
 
-	Image img = GenImageChecked(64, 64, 32, 32, DARKBROWN, DARKGRAY);
+	Image img = GenImageChecked(64, 64, 32, 32, GRAY, DARKGRAY);
 	Texture2D tile = LoadTextureFromImage(img);
 	UnloadImage(img);
 
@@ -269,7 +299,28 @@ int main()
 			Lights[0].Move(GetMousePosition());
 
 		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+		{
 			Lights.emplace_back(GetMousePosition());
+
+			switch ((Lights.size() - 1) % 3)
+			{
+			default:
+				Lights.rbegin()->SetColor(YELLOW);
+				break;
+
+			case 1:
+				Lights.rbegin()->SetColor(BLUE);
+				break;
+
+			case 2:
+				Lights.rbegin()->SetColor(RED);
+				break;
+
+			case 3:
+				Lights.rbegin()->SetColor(GREEN);
+				break;
+			}
+		}
 
 		float delta = GetMouseWheelMove();
 		if (delta != 0)
@@ -306,7 +357,7 @@ int main()
 			for (auto& light : Lights)
 			{
 				//	if (light.Valid)
-				DrawTextureRec(light.LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
+				DrawTextureRec(light.ShadowMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
 			}
 
 			rlDrawRenderBatchActive();
@@ -320,10 +371,19 @@ int main()
 
 		DrawTextureRec(tile, Rectangle{ 0,0,(float)GetScreenWidth(),(float)GetScreenHeight() }, Vector2Zero(), WHITE);
 
+		rlSetBlendMode(BLEND_ADDITIVE);
+		for (auto& light : Lights)
+		{
+			if (light.HasColor)
+				DrawTextureRec(light.GlowTexture.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), WHITE);
+		}
+		rlDrawRenderBatchActive();
+		rlSetBlendMode(BLEND_ALPHA);
+
 		DrawTextureRec(LightMask.texture, Rectangle{ 0, 0, (float)GetScreenWidth(), -(float)GetScreenHeight() }, Vector2Zero(), ColorAlpha(WHITE, showLines ? 0.75f : 1.0f));
 
 		for (auto& light : Lights)
-			DrawCircle(int(light.Position.x), int(light.Position.y), 10, YELLOW);
+			DrawCircle(int(light.Position.x), int(light.Position.y), 10, light.LightColor);
 
 		if (showLines)
 		{
