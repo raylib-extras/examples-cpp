@@ -36,7 +36,7 @@
 // stencil mask stuff
 
 
-void main()
+int main()
 {
 	SetConfigFlags(FLAG_VSYNC_HINT);
 	InitWindow(1280, 800, "Reflections");
@@ -92,4 +92,5 @@ void main()
 	}
 
 	CloseWindow();
+	return 0;
 }

@@ -21,6 +21,8 @@
 
 #include "sprites.h"
 
+#include <math.h>
+
 SpriteSheet LoadSpriteSheet(const char* file, int cols, int rows)
 {
 	SpriteSheet sheet = { 0 };

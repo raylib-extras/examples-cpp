@@ -198,7 +198,7 @@ protected:
 	float ShotAngle = 0;
 };
 
-void main()
+int main()
 {
 	SetConfigFlags(FLAG_VSYNC_HINT);
 	InitWindow(1280, 800, "Shooter Sample");
@@ -367,4 +367,6 @@ void main()
 	}
 
 	CloseWindow();
+	
+	return 0;
 }
