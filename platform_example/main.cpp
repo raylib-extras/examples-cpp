@@ -20,10 +20,15 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include "raymath.h"
 #include "sprites.h"
 
 #include <unordered_map>
 #include <vector>
+
+std::vector<Rectangle> Obstacles;
+NPatchInfo ObstacleNpatch = { 0 };
+Texture2D ObstacleTexture = { 0 };
 
 enum class ActorStates
 {
@@ -43,10 +48,28 @@ struct Actor
     std::unordered_map<ActorStates, std::vector<SpriteAnimation>> AnimationStates;
 
     float RunSpeed = 200;
-	float jumpAcceleration = -250;
+	float jumpAcceleration = -350;
     float jumpVelocityDampen = 1.125f;
     Vector2 Velocity = { 0,0 };
 };
+Actor Warrior;
+
+void LoadObstacles()
+{
+    ObstacleTexture = LoadTexture("resources/panel_blue.png");
+    ObstacleNpatch.source = Rectangle{ 0,0, (float)ObstacleTexture.width, (float)ObstacleTexture.height };
+    ObstacleNpatch.top = 20;
+    ObstacleNpatch.bottom = 20;
+    ObstacleNpatch.right = 20;
+    ObstacleNpatch.left = 20;
+
+    Obstacles.emplace_back(Rectangle{ 200,-100, 200, 50 });
+    Obstacles.emplace_back(Rectangle{ 200,-200, 200, 25 });
+
+    Obstacles.emplace_back(Rectangle{ 600,-50, 200, 50 });
+    Obstacles.emplace_back(Rectangle{ 900,-150, 200, 50 });
+}
+
 
 int main(void)
 {
@@ -55,36 +78,45 @@ int main(void)
 
     InitWindow(screenWidth, screenHeight, "sprite animation");
 
+    // setup the world
+    Camera2D cam = { 0 };
+    cam.zoom = 1;
+    cam.offset.x = 20;
+    cam.offset.y = GetScreenHeight() - 50;
+    cam.target.x = 0;
+    cam.target.y = 0;
+
+	float gravity = 500.0f;
+
+    LoadObstacles();
+
     // load our sprite sheet
     SpriteSheet warriorSheet = LoadSpriteSheet("resources/Warrior_Sheet-Effect.png", 6, 17);
 
     // create left facing versions of all the sprites
     int leftFrameStart = AddFippedFrames(warriorSheet, 0, (int)warriorSheet.Frames.size() - 1, true, false);
 
-    float groundHeight = GetScreenHeight() - 50;
-    float gravity = 500.0f;
 
     // create our warrior
-    Actor warrior;
-    warrior.Sprite = SpriteInstance{ Vector2{100, groundHeight}, Vector2{warriorSheet.Frames[0].width / 2,warriorSheet.Frames[0].height }, &warriorSheet };
+    Warrior.Sprite = SpriteInstance{ Vector2{0, 0}, Vector2{warriorSheet.Frames[0].width / 2,warriorSheet.Frames[0].height }, &warriorSheet };
 
     // define an animation for each state
-    warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "right_idle", 0, 5, 5 });
-    warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "left_idle", leftFrameStart + 0, leftFrameStart + 5, 5 });
+    Warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "right_idle", 0, 5, 5 });
+    Warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "left_idle", leftFrameStart + 0, leftFrameStart + 5, 5 });
 
-	warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "right_run", 6, 13 });
-	warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "left_run", leftFrameStart + 6, leftFrameStart + 13 });
+	Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "right_run", 6, 13 });
+	Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "left_run", leftFrameStart + 6, leftFrameStart + 13 });
 
-	warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "right_jump", 42, 44, 10  ,false});
-	warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "left_jump", leftFrameStart +42, leftFrameStart + 44, 10  ,false });
+	Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "right_jump", 41, 43, 15  ,false});
+	Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "left_jump", leftFrameStart +41, leftFrameStart + 43, 15  ,false });
 
-	warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "right_fly", 43, 43, 10 });
-	warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "left_fly", leftFrameStart + 43, leftFrameStart + 43, 10 });
+	Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "right_fly", 43, 43, 10 });
+	Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "left_fly", leftFrameStart + 43, leftFrameStart + 43, 10 });
 
-	warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "right_fall", 45, 47, 10 });
-	warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "left_fall", leftFrameStart + 45, leftFrameStart + 47, 10 });
+	Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "right_fall", 46, 48, 10 });
+	Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "left_fall", leftFrameStart + 46, leftFrameStart + 48, 10 });
 
-    SetSpriteAnimation(warrior.Sprite, warrior.AnimationStates[ActorStates::Idle][0]);
+    SetSpriteAnimation(Warrior.Sprite, Warrior.AnimationStates[ActorStates::Idle][0]);
 
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 
@@ -92,103 +124,159 @@ int main(void)
     {
         // get the input
         int runDir = 0;
-        if(IsKeyDown(KEY_D))
+        if (IsKeyDown(KEY_D))
             runDir += 1;
-		if (IsKeyDown(KEY_A))
-			runDir += -1;
+        if (IsKeyDown(KEY_A))
+            runDir += -1;
 
         bool wantJump = IsKeyDown(KEY_SPACE);
 
         // apply input and change any states as needed
-        switch (warrior.State)
+        switch (Warrior.State)
         {
         case ActorStates::Idle:
             if (wantJump)
             {
-                warrior.State = ActorStates::JumpStart;
-                warrior.Velocity.y = warrior.jumpAcceleration;
-                warrior.Velocity.x = 0;
+                if (IsKeyDown(KEY_S))
+                {
+                    Warrior.State = ActorStates::FallDown;
+                    Warrior.Sprite.Position.y += gravity * GetFrameTime();
+                }
+                else
+                {
+                    Warrior.State = ActorStates::JumpStart;
+                    Warrior.Velocity.y = Warrior.jumpAcceleration;
+                    Warrior.Velocity.x = 0;
+                }
             }
             else if (runDir != 0)
             {
-                warrior.State = ActorStates::Run;
-                warrior.FacingRight = runDir > 0;
+                Warrior.State = ActorStates::Run;
+                Warrior.FacingRight = runDir > 0;
             }
             else
-			{
-				warrior.Velocity.x = 0;
-				warrior.Velocity.y = 0;
-			}
+            {
+                Warrior.Velocity.x = 0;
+                Warrior.Velocity.y = 0;
+            }
             break;
 
         case ActorStates::Run:
-			if (wantJump)
-			{
-				warrior.State = ActorStates::JumpStart;
-				warrior.Velocity.y = warrior.jumpAcceleration;
-                warrior.Velocity.x *= warrior.jumpVelocityDampen;
-			}
+            if (wantJump)
+            {
+                Warrior.State = ActorStates::JumpStart;
+                Warrior.Velocity.y = Warrior.jumpAcceleration;
+                Warrior.Velocity.x *= Warrior.jumpVelocityDampen;
+            }
             else if (runDir == 0)
             {
-                warrior.State = ActorStates::Idle;
+                Warrior.State = ActorStates::Idle;
             }
             else
             {
-                warrior.FacingRight = runDir > 0;
-                warrior.Velocity.x = runDir * warrior.RunSpeed;
-                warrior.Velocity.y = 0;
+                Warrior.FacingRight = runDir > 0;
+                Warrior.Velocity.x = runDir * Warrior.RunSpeed;
+                Warrior.Velocity.y = 0;
             }
 
             break;
 
         case ActorStates::JumpStart:
-            if (warrior.Velocity.y >= 0)
-                warrior.State = ActorStates::FallDown;
-            else if (warrior.Sprite.AnimationDone)
-                warrior.State = ActorStates::JumpUp;
+            if (Warrior.Velocity.y >= 0)
+                Warrior.State = ActorStates::FallDown;
+            else if (Warrior.Sprite.AnimationDone)
+                Warrior.State = ActorStates::JumpUp;
             break;
 
         case ActorStates::JumpUp:
-            if (warrior.Velocity.y >= 0)
-                warrior.State = ActorStates::FallDown;
+            if (Warrior.Velocity.y >= 0)
+                Warrior.State = ActorStates::FallDown;
             break;
 
         case ActorStates::FallDown:
-            if (warrior.Sprite.Position.y >= groundHeight)
-            {
-                warrior.Velocity.x = 0;
-                warrior.Velocity.y = 0;
-                warrior.Sprite.Position.y = groundHeight;
-				warrior.State = ActorStates::Idle;
-            }
             break;
         }
 
         // if we can fall, make us fall
-        if (warrior.State != ActorStates::Idle && warrior.State != ActorStates::Run)
-            warrior.Velocity.y += gravity * GetFrameTime();
+        Warrior.Velocity.y += gravity * GetFrameTime();
 
         // move us how we want to move
-		warrior.Sprite.Position.x += warrior.Velocity.x * GetFrameTime();
-		warrior.Sprite.Position.y += warrior.Velocity.y * GetFrameTime();
 
-        // if we are not on the animation we want to be on, set us to that animation
-        if (warrior.Sprite.Animation != &(warrior.AnimationStates[warrior.State][warrior.FacingRight ? 0 : 1]))
+        Vector2 newPos = Vector2Add(Warrior.Sprite.Position, Vector2Scale(Warrior.Velocity, GetFrameTime()));
+
+        if (newPos.y > 0)
         {
-            SetSpriteAnimation(warrior.Sprite, warrior.AnimationStates[warrior.State][warrior.FacingRight ? 0 : 1]);
+            newPos.y = 0;
+            Warrior.Velocity.y = 0;
+            if (Warrior.State == ActorStates::FallDown)
+                Warrior.State = ActorStates::Idle;
+        }
+
+        for (const Rectangle& obstacle : Obstacles)
+        {
+            if (CheckCollisionPointRec(newPos, obstacle) && Warrior.Sprite.Position.y <= obstacle.y)
+            {
+                // new point would be in the obstacle
+                if (Warrior.Sprite.Position.y < newPos.y)
+                {
+                    // we are falling into the block, stop if we were falling
+                    if (Warrior.State == ActorStates::FallDown)
+                    {
+						Warrior.Velocity.x = 0;
+						Warrior.Velocity.y = 0;
+                        newPos.y = obstacle.y;
+						Warrior.State = ActorStates::Idle;
+                    }
+                    else
+                    {
+                        // we just know we can't go any further down
+						Warrior.Velocity.y = 0;
+                        newPos.y = obstacle.y;
+                    }
+                }
+            }
+        }
+
+        // are we not falling, but now we are falling?
+        if (Warrior.State != ActorStates::FallDown && Warrior.Velocity.y > 0)
+        {
+            Warrior.State = ActorStates::FallDown;
+        }
+
+        Warrior.Sprite.Position = newPos;
+        // if we are not on the animation we want to be on, set us to that animation
+        if (Warrior.Sprite.Animation != &(Warrior.AnimationStates[Warrior.State][Warrior.FacingRight ? 0 : 1]))
+        {
+            SetSpriteAnimation(Warrior.Sprite, Warrior.AnimationStates[Warrior.State][Warrior.FacingRight ? 0 : 1]);
         }
 
         // update this frame of animation
-		UpdateSpriteAnimation(warrior.Sprite);
+        UpdateSpriteAnimation(Warrior.Sprite);
+
+        Vector2 playerScreenPos = GetWorldToScreen2D(Warrior.Sprite.Position, cam);
+
+        if (playerScreenPos.x < 10)
+            cam.target.x -= GetScreenWidth() - 50;
+
+        if (playerScreenPos.x > GetScreenWidth() - 25)
+            cam.target.x += GetScreenWidth() - 50;
 
         // draw the world
         BeginDrawing();
-            ClearBackground(SKYBLUE);
-            DrawRectangle(0, groundHeight, GetScreenWidth(), GetScreenHeight() - groundHeight, BROWN);
-            DrawSprite(warrior.Sprite);
+		    ClearBackground(SKYBLUE);
+		    BeginMode2D(cam);
+		        DrawRectangle(cam.target.x - cam.offset.x, 0, GetScreenWidth(), 50, BROWN);
+
+                for (Rectangle& rect : Obstacles)
+                {
+                   // DrawRectangleRec(rect, GRAY);
+                    DrawTextureNPatch(ObstacleTexture, ObstacleNpatch, rect, Vector2Zero(), 0, WHITE);
+                }
+		        DrawSprite(Warrior.Sprite);
+		    EndMode2D();
 
             const char* stateName = "Unknown";
-            switch (warrior.State)
+            switch (Warrior.State)
             {
             case ActorStates::Idle:
                 stateName = "Idle";
