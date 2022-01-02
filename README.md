@@ -15,4 +15,4 @@ An example of how to build up cards, decks, and hands and drag cards around.
 
 #Platform Example
 An example of platfomer style movement, sprite animation, and state management
-![platform_jump](https://user-images.githubusercontent.com/322174/147867102-ce62fbbd-2f2a-4ccd-8d44-9f49450b9df5.gif
+![platform_jump](https://user-images.githubusercontent.com/322174/147867102-ce62fbbd-2f2a-4ccd-8d44-9f49450b9df5.gif)
