@@ -131,6 +131,14 @@ int main(void)
 
         bool wantJump = IsKeyDown(KEY_SPACE);
 
+        if (IsKeyPressed(KEY_Z))
+        {
+            if (cam.zoom == 1)
+                cam.zoom = 1.5f;
+            else
+                cam.zoom = 1;
+        }
+
         // apply input and change any states as needed
         switch (Warrior.State)
         {
@@ -256,10 +264,16 @@ int main(void)
         Vector2 playerScreenPos = GetWorldToScreen2D(Warrior.Sprite.Position, cam);
 
         if (playerScreenPos.x < 10)
-            cam.target.x -= GetScreenWidth() - 50;
+            cam.target.x -= (GetScreenWidth() - 50)/cam.zoom;
 
         if (playerScreenPos.x > GetScreenWidth() - 25)
-            cam.target.x += GetScreenWidth() - 50;
+            cam.target.x += (GetScreenWidth() - 50)/cam.zoom;
+
+		if (playerScreenPos.y < 10)
+			cam.target.y -= (GetScreenHeight() - 50) / cam.zoom;
+
+		if (playerScreenPos.y > GetScreenHeight() - 25)
+			cam.target.y += (GetScreenHeight() - 50) / cam.zoom;
 
         // draw the world
         BeginDrawing();
