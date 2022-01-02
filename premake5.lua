@@ -39,34 +39,34 @@ workspace "Examples-CPP"
 	targetdir "bin/%{cfg.buildcfg}/"
 	
 project "raylib"
-		filter "configurations:Debug.DLL OR Release.DLL"
-			kind "SharedLib"
-			defines {"BUILD_LIBTYPE_SHARED"}
-			
-		filter "configurations:Debug OR Release"
-			kind "StaticLib"
-			
-		filter "system:windows"
-			defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
-			links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-			
-		filter "system:linux"
-			links {"pthread", "GL", "m", "dl", "rt", "X11"}
-			
-		filter{}
-		platform_defines()
-
-		location "build"
-		language "C"
-		targetdir "bin/%{cfg.buildcfg}"
+	filter "configurations:Debug.DLL OR Release.DLL"
+		kind "SharedLib"
+		defines {"BUILD_LIBTYPE_SHARED"}
 		
-		includedirs { "raylib/src", "raylib/src/external/glfw/include"}
-		vpaths 
-		{
-			["Header Files"] = { "raylib/src/**.h"},
-			["Source Files/*"] = {"raylib/src/**.c"},
-		}
-		files {"raylib/src/*.h", "raylib/src/*.c"}
+	filter "configurations:Debug OR Release"
+		kind "StaticLib"
+		
+	filter "system:windows"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS", "_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+		
+	filter{}
+	platform_defines()
+
+	location "build"
+	language "C"
+	targetdir "bin/%{cfg.buildcfg}"
+	
+	includedirs { "raylib/src", "raylib/src/external/glfw/include"}
+	vpaths 
+	{
+		["Header Files"] = { "raylib/src/**.h"},
+		["Source Files/*"] = {"raylib/src/**.c"},
+	}
+	files {"raylib/src/*.h", "raylib/src/*.c"}
 		
 project "Pew"
 	kind "ConsoleApp"
@@ -75,8 +75,6 @@ project "Pew"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
-	platform_defines()
-	includedirs {"src"}
 	vpaths 
 	{
 		["Header Files"] = { "**.h"},
@@ -110,8 +108,6 @@ project "Cards"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
-	platform_defines()
-	includedirs {"src"}
 	vpaths 
 	{
 		["Header Files"] = { "**.h"},
@@ -145,8 +141,6 @@ project "LightCaster"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
 	
-	platform_defines()	
-	includedirs {"src"}
 	vpaths 
 	{
 		["Header Files"] = { "**.h"},
@@ -179,9 +173,7 @@ project "StencilReflection"
 	language "C++"
 	targetdir "bin/%{cfg.buildcfg}"
 	cppdialect "C++17"
-	
-	platform_defines()	
-	includedirs {"src"}
+
 	vpaths 
 	{
 		["Header Files"] = { "**.h"},
@@ -192,6 +184,39 @@ project "StencilReflection"
 	links {"raylib"}
 	
 	includedirs { "stencil_reflection", "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+		dependson {"raylib"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}	
+		
+project "PlatformMovement"
+	kind "ConsoleApp"
+	location "light_caster"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {"platform_example/**.c", "platform_example/**.cpp", "platform_example/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { "platform_example", "raylib/src" }
 	platform_defines()
 	
 	filter "action:vs*"
