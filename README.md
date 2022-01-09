@@ -14,5 +14,9 @@ An example of how to build up cards, decks, and hands and drag cards around.
 ![cards](https://user-images.githubusercontent.com/322174/138608557-5b1dfeb3-33a3-409c-8635-0dac7f7cdf36.gif)
 
 #Platform Example
-An example of platfomer style movement, sprite animation, and state management
+An example of platfomer style movement, sprite animation, and state management.
 ![platform_jump](https://user-images.githubusercontent.com/322174/147867102-ce62fbbd-2f2a-4ccd-8d44-9f49450b9df5.gif)
+
+#Unsorted Billboards
+An example of using shaders to discard pixels with 0 alpha to allow billboards to be drawn in any order.
+![unsorted_billobards](https://user-images.githubusercontent.com/322174/148694937-f7c4b166-b81a-4d48-af8f-eefbc1a3f487.gif)
