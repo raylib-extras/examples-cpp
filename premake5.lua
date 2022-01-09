@@ -199,7 +199,7 @@ project "StencilReflection"
 		
 	filter "system:linux"
 		links {"pthread", "GL", "m", "dl", "rt", "X11"}	
-		
+
 project "PlatformMovement"
 	kind "ConsoleApp"
 	location "light_caster"
@@ -217,6 +217,39 @@ project "PlatformMovement"
 	links {"raylib"}
 	
 	includedirs { "platform_example", "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+		dependson {"raylib"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}		
+
+project "UnsortedBilboards"
+	kind "ConsoleApp"
+	location "unsorted_bilboards"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {"unsorted_bilboards/**.c", "unsorted_bilboards/**.cpp", "unsorted_bilboards/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { "unsorted_bilboards", "raylib/src" }
 	platform_defines()
 	
 	filter "action:vs*"
