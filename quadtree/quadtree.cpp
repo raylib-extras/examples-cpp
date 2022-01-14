@@ -5,6 +5,7 @@
 #include <vector>
 
 Camera2D TheCamera = { 0 };
+float Radius = 300;
 
 class QuadTreeNode 
 {
@@ -13,17 +14,26 @@ public:
 
 	QuadTreeNode* Chidren[4] = { 0 };
 
-	std::vector<Vector2> Contents;
+	bool ContentValid = false;
+	Vector2 Contents;
 
-	void Split()
+	bool WasSplit = false;
+
+	bool Split()
 	{
 		if (Chidren[0] != nullptr)
-			return;
+			return true;
 
+		if (Bounds.width <= 1)
+			return false;
+
+		WasSplit = true;
 		Chidren[0] = new QuadTreeNode(Rectangle{Bounds.x,Bounds.y,Bounds.width / 2,Bounds.height / 2} );
 		Chidren[1] = new QuadTreeNode(Rectangle{ Bounds.x + Chidren[0]->Bounds.width,Bounds.y,Bounds.width / 2,Bounds.height / 2 });
 		Chidren[2] = new QuadTreeNode(Rectangle{ Bounds.x,Bounds.y + Chidren[0]->Bounds.height,Bounds.width / 2,Bounds.height / 2 });
 		Chidren[3] = new QuadTreeNode(Rectangle{ Bounds.x + Chidren[0]->Bounds.width,Bounds.y + Chidren[0]->Bounds.height,Bounds.width / 2,Bounds.height / 2 });
+
+		return true;
 	}
 
 	void AddChildPoint(int child, const Vector2& point)
@@ -34,21 +44,24 @@ public:
 
 	void AddPoint(const Vector2& point)
 	{
-		if (Contents.size() != 0)
+		if (WasSplit || ContentValid)
 		{
-			Split();
+			if (!Split())
+				return; // discard the point the node would be too small
 
 			for (int i = 0; i < 4; i++)
 			{
 				AddChildPoint(i, point);
-				AddChildPoint(i, Contents[0]);
+				if (ContentValid)
+					AddChildPoint(i, Contents);
 			}
 
-			Contents.clear();
+			ContentValid = false;
 		}
 		else
 		{
-			Contents.push_back(point);
+			ContentValid = true;
+			Contents = point;
 		}
 	}
 
@@ -69,19 +82,45 @@ public:
 
 QuadTreeNode QuadTreeRoot(Rectangle{ -1000,-1000,2000,2000 });
 
+bool RectFullyInRadius(const Rectangle& rect)
+{
+	if (!CheckCollisionPointCircle(Vector2{ rect.x, rect.y }, TheCamera.target, Radius))
+		return false;
 
-void DrawQuadTreeContents(QuadTreeNode* node)
+	if (!CheckCollisionPointCircle(Vector2{ rect.x + rect.width, rect.y }, TheCamera.target, Radius))
+		return false;
+
+	if (!CheckCollisionPointCircle(Vector2{ rect.x, rect.y + rect.height }, TheCamera.target, Radius))
+		return false;
+
+	if (!CheckCollisionPointCircle(Vector2{ rect.x + rect.width, rect.y + rect.height }, TheCamera.target, Radius))
+		return false;
+
+	return true;
+}
+
+void DrawQuadTreeContents(QuadTreeNode* node, bool drawPoints, bool drawRects)
 {
 	if (node == nullptr)
 		return;
 
-	for (auto& pt : node->Contents)
-		DrawCircleV(pt, 2, YELLOW);
+	if (drawPoints)
+	DrawCircleV(node->Contents, 2, DARKGRAY);
 
+	if (drawRects)
+	{
+		if (!node->WasSplit && node->ContentValid)
+		{
+			DrawRectangleLinesEx(node->Bounds, 2, ColorAlpha(GREEN, 0.25f));
+		}
+		else
+		{
+			DrawRectangleLinesEx(node->Bounds, 1, ColorAlpha(GRAY, 0.25f));
+		}
+	}
+		
 	for (int i = 0; i < 4; i++)
-		DrawQuadTreeContents(node->Chidren[i]);
-
-	DrawRectangleLinesEx(node->Bounds, 1, ColorAlpha(GREEN, 0.25f));
+		DrawQuadTreeContents(node->Chidren[i], drawPoints, drawRects);
 }
 
 // Draw circle outline
@@ -101,6 +140,52 @@ void DrawCircleLinesV(Vector2 center, float radius, Color color)
 	rlEnd();
 }
 
+std::vector<Vector2*> VissiblePoints;
+std::vector<Rectangle*> VisibleRects;
+
+
+void AddAllContents(QuadTreeNode* node)
+{
+	if (node == nullptr)
+		return;
+	if (node->ContentValid)
+		VissiblePoints.push_back(&node->Contents);
+	if (node->WasSplit)
+	{
+		for (int i = 0; i < 4; i++)
+			AddAllContents(node->Chidren[i]);
+	}
+}
+
+void FindRectsINRadius(QuadTreeNode* node)
+{
+	if (node == nullptr)
+		return;
+
+	if (CheckCollisionCircleRec(TheCamera.target, Radius, node->Bounds))
+	{
+		if ( RectFullyInRadius(node->Bounds) )
+		{
+			VisibleRects.push_back(&node->Bounds);
+			AddAllContents(node);
+		}
+		else
+		{
+ 			if (node->ContentValid)
+ 			{
+ 				VisibleRects.push_back(&node->Bounds);
+				VissiblePoints.push_back(&node->Contents);
+ 			}
+ 			else
+			if (node->WasSplit)
+ 			{
+				for (int i = 0; i < 4; i++)
+					FindRectsINRadius(node->Chidren[i]);
+			}
+		}
+	}
+}
+
 int main()
 {
 	InitWindow(1280, 800, "Quadtree");
@@ -110,8 +195,12 @@ int main()
 	TheCamera.offset.x = GetScreenWidth() / 2.0f;
 	TheCamera.offset.y = GetScreenHeight() / 2.0f;
 
-	for (int i = 0; i < 100; i++)
-		QuadTreeRoot.AddPoint(Vector2{(float)GetRandomValue(-900,900), (float)GetRandomValue(-900,900) });
+	for (int i = 0; i < 500; i++)
+		QuadTreeRoot.AddPoint(Vector2{(float)GetRandomValue(QuadTreeRoot.Bounds.x,QuadTreeRoot.Bounds.x + QuadTreeRoot.Bounds.width), (float)GetRandomValue(QuadTreeRoot.Bounds.y,QuadTreeRoot.Bounds.y + QuadTreeRoot.Bounds.height) });
+
+	bool DrawQuadTree = false;
+	bool DrawAllPoints = false;
+	bool DrawVisRects = false;
 
 	while (!WindowShouldClose())
 	{
@@ -129,8 +218,21 @@ int main()
 		if (IsKeyDown(KEY_DOWN))
 			TheCamera.zoom -= GetFrameTime();
 
+		if (IsKeyPressed(KEY_F1))
+			DrawQuadTree = !DrawQuadTree;
+
+		if (IsKeyPressed(KEY_F2))
+			DrawAllPoints = !DrawAllPoints;
+
+		if (IsKeyPressed(KEY_F3))
+			DrawVisRects = !DrawVisRects;
+
 		if (TheCamera.zoom < 0.01f)
 			TheCamera.zoom = 0.01f;
+
+		VisibleRects.clear();
+		VissiblePoints.clear();
+		FindRectsINRadius(&QuadTreeRoot);
 
 		BeginDrawing();
 		ClearBackground(BLACK);
@@ -142,14 +244,44 @@ int main()
 		DrawCircle(0, 0, 10, ColorAlpha(WHITE, 0.25f));
 
 		DrawCircleV(TheCamera.target, 5, BLUE);
-		DrawCircleLinesV(TheCamera.target, 300, ColorAlpha(SKYBLUE, 0.5f));
+		DrawCircleLinesV(TheCamera.target, Radius, ColorAlpha(SKYBLUE, 0.5f));
 
 		DrawRectangleLinesEx(QuadTreeRoot.Bounds, 3, WHITE);
 
-		DrawQuadTreeContents(&QuadTreeRoot);
+		if (DrawQuadTree || DrawAllPoints)
+			DrawQuadTreeContents(&QuadTreeRoot, DrawAllPoints, DrawQuadTree);
+
+		if (DrawVisRects)
+		{
+			for (Rectangle* rect : VisibleRects)
+			{
+				DrawRectangleLinesEx(*rect, 2, RED);
+			}
+		}
+
+		for (Vector2* pos : VissiblePoints)
+		{
+			DrawCircleV(*pos, 4, YELLOW);
+		}
 
 		EndMode2D();
 
+		if (DrawQuadTree)
+			DrawText("QUAD TREE Shown(F1)", 0, 0, 20, LIGHTGRAY);
+		else
+			DrawText("QUAD TREE Hidden(F1)", 0, 0, 20, LIGHTGRAY);
+
+		if (DrawAllPoints)
+			DrawText("ALL POINTS Shown(F2)", 400, 0, 20, LIGHTGRAY);
+		else
+			DrawText("ALL POINTS Hidden(F2)", 400, 0, 20, LIGHTGRAY);
+
+		if (DrawVisRects)
+			DrawText("VIS RECTS Shown(F3)", 700, 0, 20, LIGHTGRAY);
+		else
+			DrawText("VIS RECTS Hidden(F3)", 700, 0, 20, LIGHTGRAY);
+
+		DrawFPS(1000, 0);
 		EndDrawing();
 	}
 
