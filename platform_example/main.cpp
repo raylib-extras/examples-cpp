@@ -48,7 +48,7 @@ struct Actor
     std::unordered_map<ActorStates, std::vector<SpriteAnimation>> AnimationStates;
 
     float RunSpeed = 200;
-	float jumpAcceleration = -350;
+    float jumpAcceleration = -350;
     float jumpVelocityDampen = 1.125f;
     Vector2 Velocity = { 0,0 };
 };
@@ -86,7 +86,7 @@ int main(void)
     cam.target.x = 0;
     cam.target.y = 0;
 
-	float gravity = 500.0f;
+    float gravity = 500.0f;
 
     LoadObstacles();
 
@@ -104,17 +104,17 @@ int main(void)
     Warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "right_idle", 0, 5, 5 });
     Warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "left_idle", leftFrameStart + 0, leftFrameStart + 5, 5 });
 
-	Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "right_run", 6, 13 });
-	Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "left_run", leftFrameStart + 6, leftFrameStart + 13 });
+    Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "right_run", 6, 13 });
+    Warrior.AnimationStates[ActorStates::Run].emplace_back(SpriteAnimation{ "left_run", leftFrameStart + 6, leftFrameStart + 13 });
 
-	Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "right_jump", 41, 43, 15  ,false});
-	Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "left_jump", leftFrameStart +41, leftFrameStart + 43, 15  ,false });
+    Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "right_jump", 41, 43, 15  ,false});
+    Warrior.AnimationStates[ActorStates::JumpStart].emplace_back(SpriteAnimation{ "left_jump", leftFrameStart +41, leftFrameStart + 43, 15  ,false });
 
-	Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "right_fly", 43, 43, 10 });
-	Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "left_fly", leftFrameStart + 43, leftFrameStart + 43, 10 });
+    Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "right_fly", 43, 43, 10 });
+    Warrior.AnimationStates[ActorStates::JumpUp].emplace_back(SpriteAnimation{ "left_fly", leftFrameStart + 43, leftFrameStart + 43, 10 });
 
-	Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "right_fall", 46, 48, 10 });
-	Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "left_fall", leftFrameStart + 46, leftFrameStart + 48, 10 });
+    Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "right_fall", 46, 48, 10 });
+    Warrior.AnimationStates[ActorStates::FallDown].emplace_back(SpriteAnimation{ "left_fall", leftFrameStart + 46, leftFrameStart + 48, 10 });
 
     SetSpriteAnimation(Warrior.Sprite, Warrior.AnimationStates[ActorStates::Idle][0]);
 
@@ -230,15 +230,15 @@ int main(void)
                     // we are falling into the block, stop if we were falling
                     if (Warrior.State == ActorStates::FallDown)
                     {
-						Warrior.Velocity.x = 0;
-						Warrior.Velocity.y = 0;
+                        Warrior.Velocity.x = 0;
+                        Warrior.Velocity.y = 0;
                         newPos.y = obstacle.y;
-						Warrior.State = ActorStates::Idle;
+                        Warrior.State = ActorStates::Idle;
                     }
                     else
                     {
                         // we just know we can't go any further down
-						Warrior.Velocity.y = 0;
+                        Warrior.Velocity.y = 0;
                         newPos.y = obstacle.y;
                     }
                 }
@@ -269,25 +269,25 @@ int main(void)
         if (playerScreenPos.x > GetScreenWidth() - 25)
             cam.target.x += (GetScreenWidth() - 50)/cam.zoom;
 
-		if (playerScreenPos.y < 10)
-			cam.target.y -= (GetScreenHeight() - 50) / cam.zoom;
+        if (playerScreenPos.y < 10)
+            cam.target.y -= (GetScreenHeight() - 50) / cam.zoom;
 
-		if (playerScreenPos.y > GetScreenHeight() - 25)
-			cam.target.y += (GetScreenHeight() - 50) / cam.zoom;
+        if (playerScreenPos.y > GetScreenHeight() - 25)
+            cam.target.y += (GetScreenHeight() - 50) / cam.zoom;
 
         // draw the world
         BeginDrawing();
-		    ClearBackground(SKYBLUE);
-		    BeginMode2D(cam);
-		        DrawRectangle(cam.target.x - cam.offset.x, 0, GetScreenWidth(), 50, BROWN);
+            ClearBackground(SKYBLUE);
+            BeginMode2D(cam);
+                DrawRectangle(cam.target.x - cam.offset.x, 0, GetScreenWidth(), 50, BROWN);
 
                 for (Rectangle& rect : Obstacles)
                 {
                    // DrawRectangleRec(rect, GRAY);
                     DrawTextureNPatch(ObstacleTexture, ObstacleNpatch, rect, Vector2Zero(), 0, WHITE);
                 }
-		        DrawSprite(Warrior.Sprite);
-		    EndMode2D();
+                DrawSprite(Warrior.Sprite);
+            EndMode2D();
 
             const char* stateName = "Unknown";
             switch (Warrior.State)
@@ -297,17 +297,17 @@ int main(void)
                 break;
 
             case ActorStates::Run:
-				stateName = "Running";
-				break;
-			case ActorStates::JumpStart:
-				stateName = "Jump";
-				break;
+                stateName = "Running";
+                break;
+            case ActorStates::JumpStart:
+                stateName = "Jump";
+                break;
             case ActorStates::JumpUp:
-				stateName = "Flying Up";
-				break;
-			case ActorStates::FallDown:
-				stateName = "Falling";
-				break;
+                stateName = "Flying Up";
+                break;
+            case ActorStates::FallDown:
+                stateName = "Falling";
+                break;
             }
 
             DrawText(TextFormat("state:%s",stateName), 10, 10, 20, BLACK);
