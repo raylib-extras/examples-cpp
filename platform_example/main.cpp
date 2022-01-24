@@ -47,6 +47,9 @@ struct Actor
     SpriteInstance Sprite;
     std::unordered_map<ActorStates, std::vector<SpriteAnimation>> AnimationStates;
 
+    float Width = 0;
+    float Height = 0;
+
     float RunSpeed = 200;
     float jumpAcceleration = -350;
     float jumpVelocityDampen = 1.125f;
@@ -96,9 +99,11 @@ int main(void)
     // create left facing versions of all the sprites
     int leftFrameStart = AddFippedFrames(warriorSheet, 0, (int)warriorSheet.Frames.size() - 1, true, false);
 
-
     // create our warrior
     Warrior.Sprite = SpriteInstance{ Vector2{0, 0}, Vector2{warriorSheet.Frames[0].width / 2,warriorSheet.Frames[0].height }, &warriorSheet };
+
+    Warrior.Width = warriorSheet.Frames[0].width;
+    Warrior.Height = warriorSheet.Frames[0].height;
 
     // define an animation for each state
     Warrior.AnimationStates[ActorStates::Idle].emplace_back(SpriteAnimation{ "right_idle", 0, 5, 5 });
@@ -210,8 +215,10 @@ int main(void)
 
         // move us how we want to move
 
+        Vector2 oldPos = Warrior.Sprite.Position;
         Vector2 newPos = Vector2Add(Warrior.Sprite.Position, Vector2Scale(Warrior.Velocity, GetFrameTime()));
-
+        float halfWidth = Warrior.Width / 2;
+     
         if (newPos.y > 0)
         {
             newPos.y = 0;
@@ -222,25 +229,100 @@ int main(void)
 
         for (const Rectangle& obstacle : Obstacles)
         {
-            if (CheckCollisionPointRec(newPos, obstacle) && Warrior.Sprite.Position.y <= obstacle.y)
+            Rectangle warriorRect = { newPos.x - Warrior.Width / 2, newPos.y - Warrior.Height, Warrior.Width, Warrior.Height };
+
+
+            if (CheckCollisionRecs(warriorRect, obstacle))
             {
-                // new point would be in the obstacle
-                if (Warrior.Sprite.Position.y < newPos.y)
+                float playerLeft = warriorRect.x;
+                float playerRight = warriorRect.x + warriorRect.width;
+                float playerTop = warriorRect.y;
+
+                float obstacleLeft = obstacle.x;
+                float obstacleRight = obstacle.x + obstacle.width;
+                float obstacleBottom = obstacle.y + obstacle.height;
+
+                switch (Warrior.State)
                 {
-                    // we are falling into the block, stop if we were falling
-                    if (Warrior.State == ActorStates::FallDown)
+                case ActorStates::FallDown:
+                    // only two things can happen here
+                    // 1) We landed on something
+                    if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y <= obstacle.y && newPos.y >= obstacle.y)
+                    {
+                        Warrior.Velocity.y = 0;
+                        Warrior.Velocity.x = 0;
+                        newPos.y = obstacle.y;
+                        Warrior.State = ActorStates::Idle;
+                    } // 2) we slapped the side of something
+                    else if (Warrior.Velocity.x < 0 && playerRight >= obstacleLeft)
                     {
                         Warrior.Velocity.x = 0;
+                        newPos.x = obstacleLeft - halfWidth;
+                    }
+                    else if (Warrior.Velocity.x > 0 && playerLeft <= obstacleRight)
+                    {
+                        Warrior.Velocity.x = 0;
+                        newPos.x = obstacleRight + halfWidth;
+                    }
+                    break;
+
+                case ActorStates::Idle:
+                    if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y <= obstacle.y && newPos.y >= obstacle.y)
+                    {
                         Warrior.Velocity.y = 0;
+                        Warrior.Velocity.x = 0;
                         newPos.y = obstacle.y;
                         Warrior.State = ActorStates::Idle;
                     }
-                    else
+                    break;
+
+                case ActorStates::Run:
+                    if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y <= obstacle.y && newPos.y >= obstacle.y)
                     {
-                        // we just know we can't go any further down
                         Warrior.Velocity.y = 0;
+                        Warrior.Velocity.x = 0;
                         newPos.y = obstacle.y;
                     }
+                    else if (Warrior.Velocity.x > 0 && playerRight >= obstacleLeft)
+                    {
+                        Warrior.Velocity.x = 0;
+                        newPos.x = obstacleLeft - halfWidth;
+                    }
+                    else if (Warrior.Velocity.x < 0 && playerLeft <= obstacleRight)
+                    {
+                        Warrior.Velocity.x = 0;
+                        newPos.x = obstacleRight + halfWidth;
+                    }
+                    break;
+
+                case ActorStates::JumpStart:
+                case ActorStates::JumpUp:
+                    if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y + Warrior.Height >= obstacleBottom && playerTop <= obstacleBottom)
+                    {
+                        Warrior.Velocity.y = 0;
+                        newPos.y = obstacleBottom + Warrior.Height;
+                        Warrior.State = ActorStates::FallDown;
+                    }
+                    else if (playerRight >= obstacleLeft)
+                    {
+                        Warrior.Velocity.x = 0;
+                        newPos.x = obstacleLeft - halfWidth;
+                        Warrior.State = ActorStates::FallDown;
+                    }
+                    else if (playerLeft <= obstacleRight)
+                    {
+                        Warrior.Velocity.x = 0;
+                        newPos.x = obstacleRight + halfWidth;
+                        Warrior.State = ActorStates::FallDown;
+                    }
+                    break;
+   
+                default:
+                    //                   Warrior.Velocity.y = 0;
+                    //                   Warrior.Velocity.x = 0;
+                    //                   newPos = Warrior.Sprite.Position;
+                    //                   Warrior.State = ActorStates::Idle;
+                    break;
                 }
             }
         }
@@ -275,6 +357,7 @@ int main(void)
         if (playerScreenPos.y > GetScreenHeight() - 25)
             cam.target.y += (GetScreenHeight() - 50) / cam.zoom;
 
+        Rectangle warriorRect = { newPos.x - Warrior.Width / 2, newPos.y - Warrior.Height, Warrior.Width, Warrior.Height };
         // draw the world
         BeginDrawing();
             ClearBackground(SKYBLUE);
@@ -287,6 +370,9 @@ int main(void)
                     DrawTextureNPatch(ObstacleTexture, ObstacleNpatch, rect, Vector2Zero(), 0, WHITE);
                 }
                 DrawSprite(Warrior.Sprite);
+
+                DrawCircleV(Vector2{ Warrior.Sprite.Position.x,Warrior.Sprite.Position.y }, 3, YELLOW);
+                DrawRectangleLinesEx(warriorRect, 2, RED);
             EndMode2D();
 
             const char* stateName = "Unknown";
