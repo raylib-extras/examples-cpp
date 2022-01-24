@@ -26,9 +26,17 @@
 #include <unordered_map>
 #include <vector>
 
+bool IsDebuggerPresent();
+
 std::vector<Rectangle> Obstacles;
 NPatchInfo ObstacleNpatch = { 0 };
 Texture2D ObstacleTexture = { 0 };
+
+float GetDeltaTime()
+{
+    //return 1 / 60.0f;
+    return GetFrameTime();
+}
 
 enum class ActorStates
 {
@@ -153,7 +161,7 @@ int main(void)
                 if (IsKeyDown(KEY_S))
                 {
                     Warrior.State = ActorStates::FallDown;
-                    Warrior.Sprite.Position.y += gravity * GetFrameTime();
+                    Warrior.Sprite.Position.y += gravity * GetDeltaTime();
                 }
                 else
                 {
@@ -211,12 +219,12 @@ int main(void)
         }
 
         // if we can fall, make us fall
-        Warrior.Velocity.y += gravity * GetFrameTime();
+        Warrior.Velocity.y += gravity * GetDeltaTime();
 
         // move us how we want to move
 
         Vector2 oldPos = Warrior.Sprite.Position;
-        Vector2 newPos = Vector2Add(Warrior.Sprite.Position, Vector2Scale(Warrior.Velocity, GetFrameTime()));
+        Vector2 newPos = Vector2Add(Warrior.Sprite.Position, Vector2Scale(Warrior.Velocity, GetDeltaTime()));
         float halfWidth = Warrior.Width / 2;
      
         if (newPos.y > 0)
@@ -297,31 +305,28 @@ int main(void)
 
                 case ActorStates::JumpStart:
                 case ActorStates::JumpUp:
-                    if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y + Warrior.Height >= obstacleBottom && playerTop <= obstacleBottom)
-                    {
-                        Warrior.Velocity.y = 0;
-                        newPos.y = obstacleBottom + Warrior.Height;
-                        Warrior.State = ActorStates::FallDown;
-                    }
-                    else if (playerRight >= obstacleLeft)
-                    {
-                        Warrior.Velocity.x = 0;
-                        newPos.x = obstacleLeft - halfWidth;
-                        Warrior.State = ActorStates::FallDown;
-                    }
-                    else if (playerLeft <= obstacleRight)
-                    {
-                        Warrior.Velocity.x = 0;
-                        newPos.x = obstacleRight + halfWidth;
-                        Warrior.State = ActorStates::FallDown;
-                    }
-                    break;
    
-                default:
-                    //                   Warrior.Velocity.y = 0;
-                    //                   Warrior.Velocity.x = 0;
-                    //                   newPos = Warrior.Sprite.Position;
-                    //                   Warrior.State = ActorStates::Idle;
+					if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y + Warrior.Height >= obstacleBottom && playerTop <= obstacleBottom)
+					{
+                        Warrior.Velocity.x = 0;
+						Warrior.Velocity.y = 0;
+						newPos.y = oldPos.y;
+						Warrior.State = ActorStates::FallDown;
+					}
+                    else if (Warrior.Velocity.x > 0 && playerRight >= obstacleLeft)
+					{
+						Warrior.Velocity.x = 0;
+                        Warrior.Velocity.y = 0;
+						newPos.x = obstacleLeft - halfWidth;
+						Warrior.State = ActorStates::FallDown;
+					}
+					else if (Warrior.Velocity.x < 0 && playerLeft <= obstacleRight)
+					{
+						Warrior.Velocity.x = 0;
+                        Warrior.Velocity.y = 0;
+						newPos.x = obstacleRight + halfWidth;
+						Warrior.State = ActorStates::FallDown;
+					}
                     break;
                 }
             }
