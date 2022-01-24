@@ -258,19 +258,19 @@ int main(void)
                     if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y <= obstacle.y && newPos.y >= obstacle.y)
                     {
                         Warrior.Velocity.y = 0;
-                        Warrior.Velocity.x = 0;
                         newPos.y = obstacle.y;
                         Warrior.State = ActorStates::Idle;
                     } // 2) we slapped the side of something
                     else if (Warrior.Velocity.x < 0 && playerRight >= obstacleLeft)
                     {
                         Warrior.Velocity.x = 0;
-                        newPos.x = obstacleLeft - halfWidth;
+                        newPos.x = oldPos.x;
+                        newPos.x = oldPos.x;
                     }
                     else if (Warrior.Velocity.x > 0 && playerLeft <= obstacleRight)
                     {
                         Warrior.Velocity.x = 0;
-                        newPos.x = obstacleRight + halfWidth;
+                        newPos.x = oldPos.x;
                     }
                     break;
 
@@ -288,18 +288,17 @@ int main(void)
                     if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y <= obstacle.y && newPos.y >= obstacle.y)
                     {
                         Warrior.Velocity.y = 0;
-                        Warrior.Velocity.x = 0;
                         newPos.y = obstacle.y;
                     }
                     else if (Warrior.Velocity.x > 0 && playerRight >= obstacleLeft)
                     {
                         Warrior.Velocity.x = 0;
-                        newPos.x = obstacleLeft - halfWidth;
+                        newPos.x = oldPos.x;
                     }
                     else if (Warrior.Velocity.x < 0 && playerLeft <= obstacleRight)
                     {
                         Warrior.Velocity.x = 0;
-                        newPos.x = obstacleRight + halfWidth;
+                        newPos.x = oldPos.x;
                     }
                     break;
 
@@ -308,23 +307,22 @@ int main(void)
    
 					if (playerRight >= obstacleLeft && playerLeft <= obstacleRight && oldPos.y + Warrior.Height >= obstacleBottom && playerTop <= obstacleBottom)
 					{
-                        Warrior.Velocity.x = 0;
 						Warrior.Velocity.y = 0;
 						newPos.y = oldPos.y;
 						Warrior.State = ActorStates::FallDown;
 					}
-                    else if (Warrior.Velocity.x > 0 && playerRight >= obstacleLeft)
+                    else if (playerRight >= obstacleLeft)
 					{
 						Warrior.Velocity.x = 0;
                         Warrior.Velocity.y = 0;
-						newPos.x = obstacleLeft - halfWidth;
+						newPos.x = oldPos.x;
 						Warrior.State = ActorStates::FallDown;
 					}
-					else if (Warrior.Velocity.x < 0 && playerLeft <= obstacleRight)
+					else if (playerLeft <= obstacleRight)
 					{
 						Warrior.Velocity.x = 0;
                         Warrior.Velocity.y = 0;
-						newPos.x = obstacleRight + halfWidth;
+						newPos.x = oldPos.x;
 						Warrior.State = ActorStates::FallDown;
 					}
                     break;
