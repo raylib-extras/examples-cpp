@@ -13,6 +13,41 @@ function platform_defines()
 	end
 end
 
+function define_project(project_folder)
+	kind "ConsoleApp"
+	location(project_folder)
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	vpaths 
+	{
+		["Header Files"] = { "**.h"},
+		["Source Files"] = {"**.c", "**.cpp"},
+	}
+	files {project_folder.."/**.c", project_folder.."/**.cpp", project_folder.."/**.h"}
+
+	links {"raylib"}
+	
+	includedirs { project_folder, "raylib/src" }
+	platform_defines()
+	
+	filter "action:vs*"
+		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
+		dependson {"raylib"}
+		links {"raylib.lib"}
+        characterset ("MBCS")
+		
+	filter "system:windows"
+		defines{"_WIN32"}
+		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
+		libdirs {"bin/%{cfg.buildcfg}"}
+		
+	filter "system:linux"
+		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+
+end
+
 workspace "Examples-CPP"
 	configurations { "Debug","Debug.DLL", "Release", "Release.DLL" }
 	platforms { "x64", "x86"}
@@ -69,199 +104,19 @@ project "raylib"
 	files {"raylib/src/*.h", "raylib/src/*.c"}
 		
 project "Pew"
-	kind "ConsoleApp"
-	location "pew"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
+	define_project("pew")
 	
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"pew/**.c", "pew/**.cpp", "pew/**.h"}
-
-	links {"raylib"}
-	
-	includedirs { "pew", "raylib/src" }
-	platform_defines()
-	
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}
-		
 project "Cards"
-	kind "ConsoleApp"
-	location "cards"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
+	define_project("cards")
 	
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"cards/**.c", "cards/**.cpp", "cards/**.h"}
-
-	links {"raylib"}
-	
-	includedirs { "cards", "raylib/src" }
-	platform_defines()
-		
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}
-		
 project "LightCaster"
-	kind "ConsoleApp"
-	location "light_caster"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
-	
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"light_caster/**.c", "light_caster/**.cpp", "light_caster/**.h"}
+	define_project("light_caster")
 
-	links {"raylib"}
-	
-	includedirs { "light_caster", "raylib/src" }
-	platform_defines()
-	
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}
-		
 project "StencilReflection"
-	kind "ConsoleApp"
-	location "light_caster"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
-
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"stencil_reflection/**.c", "stencil_reflection/**.cpp", "stencil_reflection/**.h"}
-
-	links {"raylib"}
-	
-	includedirs { "stencil_reflection", "raylib/src" }
-	platform_defines()
-	
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}	
+	define_project("stencil_reflection")
 
 project "PlatformMovement"
-	kind "ConsoleApp"
-	location "light_caster"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
-	
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"platform_example/**.c", "platform_example/**.cpp", "platform_example/**.h"}
-
-	links {"raylib"}
-	
-	includedirs { "platform_example", "raylib/src" }
-	platform_defines()
-	
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}		
+	define_project("platform_example")
 
 project "UnsortedBilboards"
-	kind "ConsoleApp"
-	location "unsorted_bilboards"
-	language "C++"
-	targetdir "bin/%{cfg.buildcfg}"
-	cppdialect "C++17"
-	
-	vpaths 
-	{
-		["Header Files"] = { "**.h"},
-		["Source Files"] = {"**.c", "**.cpp"},
-	}
-	files {"unsorted_bilboards/**.c", "unsorted_bilboards/**.cpp", "unsorted_bilboards/**.h"}
-
-	links {"raylib"}
-	
-	includedirs { "unsorted_bilboards", "raylib/src" }
-	platform_defines()
-	
-	filter "action:vs*"
-		defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
-		dependson {"raylib"}
-		links {"raylib.lib"}
-        characterset ("MBCS")
-		
-	filter "system:windows"
-		defines{"_WIN32"}
-		links {"winmm", "kernel32", "opengl32", "kernel32", "gdi32"}
-		libdirs {"bin/%{cfg.buildcfg}"}
-		
-	filter "system:linux"
-		links {"pthread", "GL", "m", "dl", "rt", "X11"}
+	define_project("unsorted_bilboards")
