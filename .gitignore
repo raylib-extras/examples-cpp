@@ -141,3 +141,9 @@ rtextures.obj
 utils.obj
 StencilReflection.vcxproj
 StencilReflection.vcxproj.filters
+.vs
+Debug
+Release
+*.vcxproj
+*.filters
+*.user
