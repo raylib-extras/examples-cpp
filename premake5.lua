@@ -45,7 +45,8 @@ function define_project(project_folder)
 		
 	filter "system:linux"
 		links {"pthread", "GL", "m", "dl", "rt", "X11"}
-
+		
+	filter{}
 end
 
 workspace "Examples-CPP"
@@ -102,6 +103,22 @@ project "raylib"
 		["Source Files/*"] = {"raylib/src/**.c"},
 	}
 	files {"raylib/src/*.h", "raylib/src/*.c"}
+	
+project "box2d"
+	kind "StaticLib"
+	
+	location "build"
+	language "C++"
+	targetdir "bin/%{cfg.buildcfg}"
+	cppdialect "C++17"
+	
+	includedirs { "box2d/src", "box2d/include"}
+	vpaths 
+	{
+		["Header Files"] = { "box2d/include/**.h", "box2d/src/**.h"},
+		["Source Files/*"] = {"box2d/src/**.cpp"},
+	}
+	files {"box2d/src/**.h","box2d/src/**.cpp", "box2d/include/**.h"}
 		
 project "Pew"
 	define_project("pew")
@@ -120,3 +137,8 @@ project "PlatformMovement"
 
 project "UnsortedBilboards"
 	define_project("unsorted_bilboards")
+	
+project "Box2dRaylib"
+	define_project("box2d_raylib")
+	links {"box2d"}
+	includedirs { "box2d/include"}
