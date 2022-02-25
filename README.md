@@ -26,3 +26,8 @@ An example of using shaders to discard pixels with 0 alpha to allow billboards t
 An example of using the Box2d physics library with raylib.
 ![Box2d_spin](https://user-images.githubusercontent.com/322174/155644898-4667f4e6-894c-4ae0-90bd-485c503fe2a6.gif)
 
+#Box2d Raylib Objects
+An more advanced example using box2d and objects
+![box2d_objects](https://user-images.githubusercontent.com/322174/155657154-b13f5fa7-2f18-43ce-a647-deb2cebff826.gif)
+
+

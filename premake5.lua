@@ -142,3 +142,8 @@ project "Box2dRaylib"
 	define_project("box2d_raylib")
 	links {"box2d"}
 	includedirs { "box2d/include"}
+	
+project "Box2dRaylibObjects"
+	define_project("box2d_raylib_objects")
+	links {"box2d"}
+	includedirs { "box2d/include"}
