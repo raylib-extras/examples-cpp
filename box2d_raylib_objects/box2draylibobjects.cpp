@@ -141,7 +141,6 @@ int main(void)
     cam.offset.x = GetScreenWidth() / 2.0f;
     cam.zoom = 4;
 
-
     BoxObject ground(Vector2{ 0,0 }, Vector2{ 200, 2 }, BROWN, 0, false);
     
     // ground box
@@ -152,8 +151,6 @@ int main(void)
     Objects.push_back(new BoxObject(Vector2{ -20,-60 }, Vector2{ 8,12 }, BLUE , -30));
 
     Objects.push_back(new BallObject(Vector2{ 0, -80 },3, PURPLE));
-
-    float timeStep = 1.0f / 60.0f;
 
     int32 velocityIterations = 6;
     int32 positionIterations = 2;
@@ -168,11 +165,11 @@ int main(void)
         }
         if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
         {
-            Objects.push_back(new BoxObject(pos, Vector2{ float(GetRandomValue(10,20)),float(GetRandomValue(10,20)) }, MAROON, GetRandomValue(0, 90)));
+            Objects.push_back(new BoxObject(pos, Vector2{ float(GetRandomValue(10,20)),float(GetRandomValue(10,20)) }, MAROON, float(GetRandomValue(0, 180))));
         }
 
         // update the world for the new frame
-        World.Step(timeStep, velocityIterations, positionIterations);
+        World.Step(GetFrameTime(), velocityIterations, positionIterations);
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
@@ -198,7 +195,7 @@ int main(void)
             EndMode2D();
 
             DrawFPS(0, 0);
-            DrawText("Click to add a ball", 100, 0, 20, BLACK);
+            DrawText("Left Click to add a ball - Right Click to add a box", 100, 0, 20, BLACK);
         EndDrawing();
     }
 

@@ -84,8 +84,6 @@ int main(void)
 
     body->CreateFixture(&fixtureDef);
 
-    float timeStep = 1.0f / 60.0f;
-
     int32 velocityIterations = 6;
     int32 positionIterations = 2;
 
@@ -100,7 +98,7 @@ int main(void)
         }
 
         // update the world for the new frame
-        world.Step(timeStep, velocityIterations, positionIterations);
+        world.Step(GetFrameTime(), velocityIterations, positionIterations);
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
