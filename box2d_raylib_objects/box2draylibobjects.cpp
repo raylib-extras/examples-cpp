@@ -155,6 +155,9 @@ int main(void)
     int32 velocityIterations = 6;
     int32 positionIterations = 2;
 
+    float accumulator = 0;
+    float physTime = 1 / 60.0f;
+
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -169,7 +172,12 @@ int main(void)
         }
 
         // update the world for the new frame
-        World.Step(GetFrameTime(), velocityIterations, positionIterations);
+        accumulator += GetFrameTime();
+        while (accumulator >= physTime)
+        {
+            accumulator -= physTime;
+            World.Step(physTime, velocityIterations, positionIterations);
+        }
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
