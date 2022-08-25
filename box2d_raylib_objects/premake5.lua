@@ -1,17 +1,9 @@
+baseName = path.getbasename(os.getcwd())
 
-baseName = path.getbasename(os.getcwd());
+defineWorkspace(baseName)
 
 project (baseName)
-    kind "ConsoleApp"
-    location "../build"
-    targetdir "../bin/%{cfg.buildcfg}"
-
-    vpaths 
-    {
-        ["Header Files/*"] = { "**.h"},
-        ["Source Files/*"] = {"**.c", "**.cpp"},
-    }
-     files {"**.c", "**.cpp", "**.h", "../box2d/include/**h", "../box2d/src/**.cpp", "../box2d/src/**.h"}
-
-	includedirs { "./","../box2d/include/"}
-	setup_raylib();
+    files {"../box2d-main/include/**h", "../box2d-main/src/**.cpp", "../box2d-main/src/**.h"}
+    includedirs {"../box2d-main/include/"}
+    files {"../box2d/include/**h", "../box2dn/src/**.cpp", "../box2d/src/**.h"}
+    includedirs {"../box2d/include/"}

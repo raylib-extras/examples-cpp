@@ -147,3 +147,6 @@ Release
 *.vcxproj
 *.filters
 *.user
+box2d-main
+raylib-master
+*.sln
