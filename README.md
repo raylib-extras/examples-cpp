@@ -25,18 +25,18 @@ A very simple game where you drive a tank around and shoot targets
 An example of how to build up cards, decks, and hands and drag cards around.
 ![cards](https://user-images.githubusercontent.com/322174/138608557-5b1dfeb3-33a3-409c-8635-0dac7f7cdf36.gif)
 
-#Platform Example
+# Platform Example
 An example of platfomer style movement, sprite animation, and state management.
 ![platform_jump](https://user-images.githubusercontent.com/322174/147867102-ce62fbbd-2f2a-4ccd-8d44-9f49450b9df5.gif)
 
-#Box2d Raylib
+# Box2d Raylib
 An example of using the Box2d physics library with raylib.
 ![Box2d_spin](https://user-images.githubusercontent.com/322174/155644898-4667f4e6-894c-4ae0-90bd-485c503fe2a6.gif)
 
-#Box2d Raylib Objects
+# Box2d Raylib Objects
 An more advanced example using box2d and objects
 ![box2d_objects](https://user-images.githubusercontent.com/322174/155657154-b13f5fa7-2f18-43ce-a647-deb2cebff826.gif)
 
-#Voxel Mesher
+# Voxel Mesher
 An example of how to create blockgame (minecraft) style voxel chunk meshes.
 
