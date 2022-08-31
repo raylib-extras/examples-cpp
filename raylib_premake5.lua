@@ -25,7 +25,7 @@ function get_raylib_dir()
         return "raylib-master"
     end
     if (os.isdir("../raylib-master")) then
-        return "../raylib-master"
+        return "raylib-master"
     end
     if (os.isdir("../raylib")) then
         return "../raylib"
