@@ -234,6 +234,12 @@ public:
 
 		SelectedCard = card;
 
+		auto itr = std::find(Cards.begin(), Cards.end(), SelectedCard);
+		if (itr != Cards.end())
+			Cards.erase(itr);
+
+		Cards.push_back(SelectedCard);
+
 		// make it look like we picked up the card
 		SelectedCard->Position.x -= 5;
 		SelectedCard->Position.y -= 5;
@@ -254,20 +260,19 @@ public:
 	{
 		for (Card* card : Cards)
 		{
-			if (card != SelectedCard)
-				card->Draw();
-		}
+			if (card == SelectedCard)
+			{
+				// draw a shadow below the card
+				Rectangle shadow = SelectedCard->GetScreenRect();
+				shadow.x += 10;
+				shadow.y += 10;
 
-		if (SelectedCard != nullptr)
-		{
-			// draw a shadow below the card
-			Rectangle shadow = SelectedCard->GetScreenRect();
-			shadow.x += 10;
-			shadow.y += 10;
+				DrawRectangleRec(shadow, ColorAlpha(BLACK, 0.5f));
 
-			DrawRectangleRec(shadow, ColorAlpha(BLACK, 0.5f));
+			}
 
-			SelectedCard->Draw();
+			card->Draw();
+			
 		}
 	}
 };
@@ -286,7 +291,7 @@ int main()
 	Deck cards;
 
 	// the deck of cards we can pull from
-	Stack DrawDeck{ 30, 20 };
+	Stack DrawDeck{ 50, 50 };
 	DrawDeck.FromDeck(cards);
 	DrawDeck.Shuffle();
 
@@ -311,8 +316,9 @@ int main()
 		}
 		else if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) // check to see if we are selecting a card from the hand
 		{ 
-			for (Card* card : PlayerHand.Cards)
+			for (auto itr = PlayerHand.Cards.rbegin(); itr != PlayerHand.Cards.rend(); itr++ )
 			{
+				auto* card = *itr;
 				if (card->PointIn(GetMousePosition()))
 				{
 					// activate this card so we can start dragging it.
@@ -350,6 +356,7 @@ int main()
 		BeginDrawing();
 		ClearBackground(DARKGREEN);
 
+		DrawText("DECK", DrawDeck.Pos.x, DrawDeck.Pos.y - 40, 20, PINK);
 		DrawDeck.Draw();
 		PlayerHand.Draw();
 
