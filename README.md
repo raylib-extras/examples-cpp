@@ -40,6 +40,9 @@ An more advanced example using box2d and objects
 # Voxel Mesher
 An example of how to create blockgame (minecraft) style voxel chunk meshes.
 
+# Transform Hierarchy
+An example of how to use nested transforms in a parrent/child relationship to build up complex transformations. Example is a simple first person controller with an attached gun.
+
 # raycaster
 Raylib software Raycaster similar to Wolfenstein 3D
 	Based on algorithms from https://lodev.org/cgtutor/raycasting.html
