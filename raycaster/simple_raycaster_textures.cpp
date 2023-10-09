@@ -62,7 +62,7 @@ constexpr uint8_t MapWidth = 24;
 constexpr uint8_t MapHeight = 24;
 
 // how big each map grid is in pixels for the top view
-constexpr uint8_t MapPixelSize = 16;
+constexpr uint8_t MapPixelSize = 24;
 
 RenderTexture MapRenderTexture;	// render texture for the top view
 RenderTexture ViewRenderTexture; // render texture for the 3d view
@@ -70,8 +70,8 @@ RenderTexture ViewRenderTexture; // render texture for the 3d view
 Texture2D WallTexture = { 0 };
 
 // 3d view size
-constexpr uint16_t ViewWidth = 256;
-constexpr uint16_t ViewHeight = 196;
+constexpr uint16_t ViewWidth = 256 * 4;
+constexpr uint16_t ViewHeight = 192 * 4;
 
 constexpr float ViewFOV = 90 * DEG2RAD;
 
@@ -393,11 +393,14 @@ void UpdateMovement()
 	// compute a rotation for this frame
 	float rotation = 0;
 
-	if (IsKeyDown(KEY_A))
+	if (IsKeyDown(KEY_Q))
 		rotation += rotationSpeed;
 
-	if (IsKeyDown(KEY_D))
+	if (IsKeyDown(KEY_E))
 		rotation -= rotationSpeed;
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+        rotation -= GetMouseDelta().x / 100.0f;
 
 	// rotate the player and the camera plane
 	PlayerFacing = Vector2Rotate(PlayerFacing, rotation);
@@ -416,10 +419,10 @@ void UpdateMovement()
 	if (IsKeyDown(KEY_S))
 		newPos = Vector2Add(newPos, Vector2Scale(PlayerFacing, -movementSpeed));
 
-	if (IsKeyDown(KEY_Q))
+	if (IsKeyDown(KEY_A))
 		newPos = Vector2Add(newPos, Vector2Scale(sideStepVector, movementSpeed));
 
-	if (IsKeyDown(KEY_E))
+	if (IsKeyDown(KEY_D))
 		newPos = Vector2Add(newPos, Vector2Scale(sideStepVector, -movementSpeed));
 
 	// if the new pos is not inside the world, allow the player to move there
@@ -430,9 +433,9 @@ void UpdateMovement()
 int main()
 {
 	// set up the window
-	SetConfigFlags(FLAG_VSYNC_HINT);
-	InitWindow(1280, 800, "Raycaster Example");
-	SetTargetFPS(144);
+	//SetConfigFlags(FLAG_VSYNC_HINT);
+	InitWindow(1800, 900, "Raycaster Example");
+	//SetTargetFPS(500);
 
 	// load render textures for the top view and 3d view
 	MapRenderTexture = LoadRenderTexture(MapWidth * MapPixelSize, MapHeight * MapPixelSize);
