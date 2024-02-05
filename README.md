@@ -43,6 +43,9 @@ An example of how to create blockgame (minecraft) style voxel chunk meshes.
 # Transform Hierarchy
 An example of how to use nested transforms in a parrent/child relationship to build up complex transformations. Example is a simple first person controller with an attached gun.
 
+# Hardpoints 2d
+An example of how to build up objects with attachment using compound transforms.
+
 # raycaster
 Raylib software Raycaster similar to Wolfenstein 3D
 	Based on algorithms from https://lodev.org/cgtutor/raycasting.html
