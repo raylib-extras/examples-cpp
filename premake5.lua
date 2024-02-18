@@ -113,6 +113,8 @@ function defineWorkspace(baseName)
         files {"**.c", "**.cpp", "**.h", "**.hpp"}
 
         includedirs { "./"}
+        includedirs { "./src"}
+        includedirs { "./include"}
         link_raylib();
 end
 
