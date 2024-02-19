@@ -59,13 +59,13 @@ public:
 
     virtual ~ObjectTransform() = default;
 
-    inline ObjectTransform* GetParent() const { return Parent; }
+    ObjectTransform* GetParent() const { return Parent; }
 
-    inline const std::vector<ObjectTransform*>& GetChildren() const { return Children; }
+    const std::vector<ObjectTransform*>& GetChildren() const { return Children; }
 
     Quaternion GetOrientation() const { return Orientation; }
 
-    inline ObjectTransform* AddChild(ObjectTransform* child)
+    ObjectTransform* AddChild(ObjectTransform* child)
     {
         if (!child)
             return nullptr;
@@ -75,14 +75,14 @@ public:
         return child;
     }
 
-    inline ObjectTransform& AddChild(ObjectTransform& child)
+    ObjectTransform& AddChild(ObjectTransform& child)
     {
         child.Reparent(this);
 
         return child;
     }
 
-    inline void Reparent(ObjectTransform* newParent)
+    void Reparent(ObjectTransform* newParent)
     {
         if (Parent == newParent)
             return;
@@ -99,7 +99,7 @@ public:
             Parent->Children.push_back(this);
     }
 
-    inline void Detach()
+    void Detach()
     {
         if (!GetParent())
             return;
@@ -115,7 +115,7 @@ public:
         Reparent(nullptr);
     }
 
-    inline void SetDirty()
+    void SetDirty()
     {
         Dirty = true;
         for (ObjectTransform* childTransform : Children)
@@ -125,49 +125,44 @@ public:
         }
     }
 
-    inline const Vector3& GetPosition() const { return Position; }
+    const Vector3& GetPosition() const { return Position; }
 
-    inline Quaternion GetOrientation()
-    {
-        return Orientation;
-    }
-
-    inline Vector3 GetEulerAngles()
+    Vector3 GetEulerAngles() const
     {
         return QuaternionToEuler(Orientation);
     }
 
-    inline Vector3 GetDVector() const
+    Vector3 GetDVector() const
     {
         return Vector3Transform(Vector3{ 0, 0, 1 }, MatrixInvert(QuaternionToMatrix(Orientation)));
     }
 
-    inline Vector3 GeVVector() const
+    Vector3 GeVVector() const
     {
         return Vector3Transform(Vector3{ 0, 1, 0 }, MatrixInvert(QuaternionToMatrix(Orientation)));
     }
 
-    inline Vector3 GetHNegVector()
+    Vector3 GetHNegVector() const
     {
         return Vector3CrossProduct(GeVVector(), GetDVector());
     }
 
-    inline Vector3 GetHPosVector()
+    Vector3 GetHPosVector() const
     {
         return Vector3CrossProduct(GetDVector(), GeVVector());
     }
 
-    inline Vector3 GetWorldPosition()
+    Vector3 GetWorldPosition()
     {
         return Vector3Transform(Vector3Zero(), GetWorldMatrix());
     }
 
-    inline Vector3 GetWorldTargetPoint()
+    Vector3 GetWorldTargetPoint()
     {
         return Vector3Transform(Vector3{ 0,1,0 }, GetWorldMatrix());
     }
 
-    inline void SetPosition(float x, float y, float z)
+    void SetPosition(float x, float y, float z)
     {
         Position.x = x;
         Position.y = y;
@@ -175,7 +170,7 @@ public:
         SetDirty();
     }
 
-    inline void MovePosition(float x, float y, float z)
+    void MovePosition(float x, float y, float z)
     {
         Position.x += x;
         Position.y += y;
@@ -183,32 +178,32 @@ public:
         SetDirty();
     }
 
-    inline void SetPosition(const Vector3& pos)
+    void SetPosition(const Vector3& pos)
     {
         Position = pos;
         SetDirty();
     }
 
-    inline void SetOrientation(const Vector3& eulerAngles)
+    void SetOrientation(const Vector3& eulerAngles)
     {
         Vector3 angles = Vector3Scale(eulerAngles, DEG2RAD);
         Orientation = QuaternionFromEuler(angles.x, angles.y, angles.z);
         SetDirty();
     }
 
-    inline bool IsDirty()
+    bool IsDirty() const
     {
         return Dirty;
     }
 
-    inline void LookAt(const Vector3& target, const Vector3& up)
+    void LookAt(const Vector3& target, const Vector3& up)
     {
         SetDirty();
         Matrix mat = MatrixLookAt(Position, target, up);
         Orientation = QuaternionFromMatrix(mat);
     }
 
-    inline Matrix GetLocalMatrix()
+    Matrix GetLocalMatrix() const
     {
         Matrix orient = QuaternionToMatrix(Orientation);
         Matrix translation = MatrixTranslate(Position.x, Position.y, Position.z);
@@ -216,7 +211,7 @@ public:
         return MatrixMultiply(MatrixInvert(orient), translation);
     }
 
-    inline void UpdateWorldMatrix()
+    void UpdateWorldMatrix()
     {
         Matrix parentMatrix = MatrixIdentity();
 
@@ -229,7 +224,7 @@ public:
         Dirty = false;
     }
 
-    inline const Matrix& GetWorldMatrix()
+    const Matrix& GetWorldMatrix()
     {
         if (!IsDirty())
             return WorldMatrix;
@@ -238,7 +233,7 @@ public:
         return WorldMatrix;
     }
 
-    inline const Matrix& GetGLWorldMatrix()
+    const Matrix& GetGLWorldMatrix()
     {
         if (!IsDirty())
             return GlWorldMatrix;
@@ -247,105 +242,104 @@ public:
         return GlWorldMatrix;
     }
 
-    inline Vector3 ToLocalPos(const Vector3& inPos)
+    Vector3 ToLocalPos(const Vector3& inPos)
     {
         return Vector3Transform(inPos, MatrixInvert(GetWorldMatrix()));
     }
 
-    inline void MoveV(float distance)
+    void MoveV(float distance)
     {
         SetDirty();
         Position = Vector3Add(Position, Vector3Scale(GeVVector(), distance));
     }
 
-    inline void MoveD(float distance)
+    void MoveD(float distance)
     {
         SetDirty();
         Position = Vector3Add(Position, Vector3Scale(GetDVector(), distance));
     }
 
-    inline void MoveH(float distance)
+    void MoveH(float distance)
     {
         SetDirty();
         Position = Vector3Add(Position, Vector3Scale(GetHNegVector(), distance));
     }
 
-
-    inline void SetV(float value)
+    void SetV(float value)
     {
         SetDirty();
         Position.y = value;
     }
 
-    inline void SetD(float value)
+    void SetD(float value)
     {
         SetDirty();
         Position.z = value;
     }
 
-    inline void SeteH(float value)
+    void SeteH(float value)
     {
         SetDirty();
         Position.x = value;
     }
 
-    inline void RotateY(float angle)
+    void RotateY(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(0, -angle * DEG2RAD, 0);
         Orientation = QuaternionMultiply(Orientation, rot);
     }
 
-    inline void RotateX(float angle)
+    void RotateX(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(angle * DEG2RAD, 0, 0);
         Orientation = QuaternionMultiply(Orientation, rot);
     }
 
-    inline void RotateZ(float angle)
+    void RotateZ(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(0, 0, -angle * DEG2RAD);
         Orientation = QuaternionMultiply(Orientation, rot);
     }
 
-    inline void RotateH(float angle)
+    void RotateH(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(angle * DEG2RAD, 0, 0);
         Orientation = QuaternionMultiply(rot, Orientation);
     }
 
-    inline void RotateV(float angle)
+    void RotateV(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(0, -angle * DEG2RAD, 0);
         Orientation = QuaternionMultiply(rot, Orientation);
     }
 
-    inline void RotateD(float angle)
+    void RotateD(float angle)
     {
         SetDirty();
         auto rot = QuaternionFromEuler(0, 0, -angle * DEG2RAD);
         Orientation = QuaternionMultiply(rot, Orientation);
     }
 
-    inline void SetCamera(Camera3D& camera)
+    void SetCamera(Camera3D& camera)
     {
         camera.position = Vector3Transform(Vector3Zero(), GetWorldMatrix());
         camera.target = Vector3Transform(Vector3{ 0,0,1 }, WorldMatrix);
         camera.up = Vector3Subtract(Vector3Transform(Vector3{ 0,1,0 }, WorldMatrix), camera.target);
     }
 
-    inline void PushMatrix()
+    void PushMatrix()
     {
         const Matrix& glMatrix = GetGLWorldMatrix();
         rlPushMatrix();
         rlMultMatrixf((float*)(&glMatrix.m0));
     }
 
-    inline void PopMatrix()
+    void PopMatrix()
     {
         rlPopMatrix();
     }

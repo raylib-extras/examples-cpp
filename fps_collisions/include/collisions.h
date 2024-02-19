@@ -31,4 +31,4 @@
 #include "raylib.h"
 
 void PointNearestRectanglePoint(Rectangle rect, Vector2 point, Vector2& nearest, Vector2& normal);
-bool IntersectBBoxSphere(BoundingBox bounds, Vector3& center, Vector3 initalPosition, float radius, float height, Vector3& intersectionPoint, Vector3& hitNormal);
+bool IntersectBBoxCylinder(BoundingBox bounds, Vector3& center, Vector3 initalPosition, float radius, float height, Vector3& intersectionPoint, Vector3& hitNormal);

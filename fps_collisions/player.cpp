@@ -59,21 +59,29 @@ void PlayerInfo::Setup()
     ViewCamera.target.y = 2;
     ViewCamera.position.y = 2;
     ViewCamera.position.z = -5;
+
+#ifndef _DEBUG
+    DisableCursor();
+#endif // _DEBUG
 }
 
 void PlayerInfo::Update(Map& map)
 {
     DesiredMovement.x = DesiredMovement.y = DesiredMovement.z = 0;
 
+#ifdef _DEBUG
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+#endif
     {
         constexpr float mouseSpeedScale = 0.5f;
         constexpr float maxViewAngle = 89.95f;
         constexpr float forwardSpeed = 30;
         constexpr float sideSpeed = 10;
 
+        // rotate the player by the horizontal delta
         PlayerNode.RotateV(-GetMouseDelta().x * mouseSpeedScale);
 
+        // rotate the camera node (head) by the tilt angle (clamped)
         TitltAngle += -GetMouseDelta().y * mouseSpeedScale;
         if (TitltAngle > maxViewAngle)
             TitltAngle = maxViewAngle;
@@ -82,6 +90,7 @@ void PlayerInfo::Update(Map& map)
 
         CameraNode.SetOrientation(Vector3{ TitltAngle,0,0 });
 
+        // get the input movement
         Vector2 wadsVector = { 0 };
 
         if (IsKeyDown(KEY_W))
@@ -94,10 +103,12 @@ void PlayerInfo::Update(Map& map)
         if (IsKeyDown(KEY_D))
             wadsVector.x -= 1;
 
+        // handle forward and sidestep motion
         DesiredMovement = Vector3Add(DesiredMovement, Vector3Scale(PlayerNode.GetDVector(), forwardSpeed * wadsVector.y * GetFrameTime()));
         DesiredMovement = Vector3Add(DesiredMovement, Vector3Scale(PlayerNode.GetHNegVector(), sideSpeed * wadsVector.x * GetFrameTime()));
     }
 
+    // if we are moving, bobble the gun a little
     if (Vector3LengthSqr(DesiredMovement) > 0)
     {
         BobbleTime += GetFrameTime();
@@ -105,40 +116,43 @@ void PlayerInfo::Update(Map& map)
         GunNode.SetV(GunDefaultV + cosf(BobbleTime * 6.0f) * 0.02f);
     }
 
+    // try and move the player in the world and see where we end up after we hit all the things.
     Vector3 oldPos = PlayerNode.GetPosition();
     Vector3 newWorldPos = Vector3Add(oldPos, DesiredMovement);
 
     HitLastFrame = map.CollidePlayer(newWorldPos, oldPos, CollisionRadius, 2);
 
+    // set the player to where they can be
     PlayerNode.SetPosition(newWorldPos);
 
+    // update the camera with the new view.
     CameraNode.SetCamera(ViewCamera);
 
-    // see what the ray out of the gun would hit
-
+    // raycast from the gun into the world to see what it would hit
     Ray gunRay = { 0 };
     gunRay.position = Vector3Transform(Vector3Zero(), GunNode.GetWorldMatrix());
     gunRay.direction = Vector3Subtract(Vector3Transform(Vector3{ 0,0,1 }, GunNode.GetWorldMatrix()), gunRay.position);
 
-    RayCollision thisCollision = { 0 };
+    map.CollideRay(gunRay, LastGunCollision);   // optional, if you need to know what you hit, you can pass a pointer in here that will be set with the wall that is hit
 
-    LastGunCollision.hit = false;
-    LastGunCollision.distance = std::numeric_limits<float>::max();
+    // handle shooting
+    Reload -= GetFrameTime();  // decrement reload wait time
 
-    map.CollideRay(gunRay, LastGunCollision);
-
-    Reload -= GetFrameTime();
-
+    // if we can shoot, and they want to shoot
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && Reload <= 0)
     {
+        // make them wait for another shot
         Reload = ReloadTime;
 
+        // make the gun sound
         map.AddShotSound();
 
+        // if they hit something, then add an explosion there
         if (LastGunCollision.hit)
             map.AddExplosition(LastGunCollision);
     }
 
+    // gun recoil 'animation'
     float param = 0;
     if (Reload > 0)
         param = Reload / ReloadTime;
@@ -150,8 +164,10 @@ void PlayerInfo::Draw()
 {
     GunNode.PushMatrix();
 
-    DrawModel(GunMesh, Vector3{ 0, 0, 0 }, 1, WHITE);
+    DrawModel(GunMesh, Vector3Zero(), 1, WHITE);
 
-    DrawLine3D(Vector3Zero(), Vector3{ 0,0,100 }, RED);
+    // laser out of gun
+    DrawLine3D(Vector3Zero(), Vector3{ 0, 0, 100 }, RED);
+
     GunNode.PopMatrix();
 }

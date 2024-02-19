@@ -33,30 +33,7 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "rlights.h"
 
-bool Obstacle::CheckAxis(float axisSize, float position, float radius, float& motion)
-{
-    float min = position - radius;
-    float max = position + radius;
-
-    if (motion > 0)
-    {
-        if (max > -axisSize)
-        {
-            motion = position - (-axisSize - radius);
-            return true;
-        }
-    }
-    else if (motion < 0)
-    {
-        if (min < axisSize)
-        {
-            motion = position - (axisSize + radius);
-            return true;
-        }
-    }
-    return false;
-}
-
+// obstacle
 Obstacle::Obstacle(float x, float z, float width, float height, float depth, float angle)
 {
     Transform.SetPosition(x, height * 0.5f, z);
@@ -69,15 +46,19 @@ Obstacle::Obstacle(float x, float z, float width, float height, float depth, flo
     Bounds.max = Vector3{ width * 0.5f, height * 0.5f, depth * 0.5f };
 }
 
-bool Obstacle::CollideWithPlayer(Vector3 & newPosition, Vector3 oldPosition, float radius, float height)
+bool Obstacle::CollideWithPlayer(Vector3& newPosition, Vector3 oldPosition, float radius, float height)
 {
+    // transform the input into the rotated space of the obstacle
     Matrix objectMatrix = Transform.GetWorldMatrix();
     Vector3 localPos = Vector3Transform(newPosition, MatrixInvert(objectMatrix));
     Vector3 locaOldPos = Vector3Transform(oldPosition, MatrixInvert(objectMatrix));
 
     Vector3 hitNormal = { 0 };
-    bool hit = IntersectBBoxSphere(Bounds, localPos, locaOldPos, radius, height, LastNearestPoint, hitNormal);
 
+    // see if the player cylinder (in local space) hits our bounding box, and clamp the position to be outside of it
+    bool hit = IntersectBBoxCylinder(Bounds, localPos, locaOldPos, radius, height, LastNearestPoint, hitNormal);
+
+    // transform the local position back into worldspace
     newPosition = Vector3Transform(localPos, objectMatrix);
 
     return hit;
@@ -85,14 +66,18 @@ bool Obstacle::CollideWithPlayer(Vector3 & newPosition, Vector3 oldPosition, flo
 
 bool Obstacle::CheckRaycast(Ray worldRay, RayCollision & collision)
 {
+    // transform the ray into local space
     Matrix objectMatrix = Transform.GetWorldMatrix();
     Ray localRay = { 0 };
     localRay.position = Vector3Transform(worldRay.position, MatrixInvert(objectMatrix));
     localRay.direction = Vector3Transform(Vector3Add(worldRay.position, worldRay.direction), MatrixInvert(objectMatrix));
     localRay.direction = Vector3Subtract(localRay.direction, localRay.position);
 
+    // see if the local space ray hits our bounding box
     collision = GetRayCollisionBox(localRay, Bounds);
 
+
+    // transform the hit point and normal back into world space
     if (collision.hit)
     {
         collision.point = Vector3Transform(collision.point, objectMatrix);
@@ -102,7 +87,7 @@ bool Obstacle::CheckRaycast(Ray worldRay, RayCollision & collision)
     return collision.hit;
 }
 
-
+// map graphics
 static Mesh WallMesh = { 0 };
 static Mesh PlaneMesh = { 0 };
 
@@ -121,6 +106,8 @@ void BuildDemoMap(Map& map)
     map.Walls.emplace_back(0.0f, -20.0f, 1.5f, 3.0f, 35.0f, 90.0f);
 }
 
+
+// map
 void Map::SetupGraphics()
 {
     CleanupGraphics();
@@ -152,7 +139,6 @@ void Map::CleanupGraphics()
 
     UnloadShader(WallMaterial.shader);
     WallMaterial.shader.id = 0;
-
 
     UnloadTexture(WallMaterial.maps[MATERIAL_MAP_ALBEDO].texture);
     WallMaterial.maps[MATERIAL_MAP_ALBEDO].texture.id = 0;
@@ -235,7 +221,7 @@ void Map::Draw(Camera3D &view)
     DrawCube(Vector3{ 1,0,0 }, 1.25f, 0.25f, 0.25f, RED);
     DrawCube(Vector3{ 0,0,1 }, 0.25f, 0.25f, 1.25f, BLUE);
 
-    // explositions
+    // explosions
     rlDisableDepthMask();
     for (auto& explosion : Explosions)
     {

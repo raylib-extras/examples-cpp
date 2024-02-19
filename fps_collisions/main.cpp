@@ -82,7 +82,9 @@ void GameDraw(Map& map)
     ClearBackground(SKYBLUE);
 
     Draw3D(map);
+
     HUD::Draw(map, Player);
+
     EndDrawing();
 }
 

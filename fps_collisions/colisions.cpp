@@ -31,7 +31,8 @@
 #include "collisions.h"
 #include "raymath.h"
 
-bool IntersectBBoxSphere(BoundingBox bounds, Vector3& center, Vector3 initalPosition, float radius, float height, Vector3& intersectionPoint, Vector3& hitNormal)
+// check if a cylinder hits a bounding box
+bool IntersectBBoxCylinder(BoundingBox bounds, Vector3& center, Vector3 initalPosition, float radius, float height, Vector3& intersectionPoint, Vector3& hitNormal)
 {
     Rectangle rect = { bounds.min.x, bounds.min.z, bounds.max.x - bounds.min.x, bounds.max.z - bounds.min.z };
     Vector2 center2d = { center.x, center.z };

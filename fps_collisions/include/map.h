@@ -35,10 +35,6 @@
 
 class Obstacle
 {
-protected:
-
-    bool CheckAxis(float axisSize, float position, float radius, float& motion);
-
 public:
     ObjectTransform Transform;
     Vector3 Scale = { 1, 1, 1 };

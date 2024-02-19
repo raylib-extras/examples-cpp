@@ -86,6 +86,11 @@ namespace HUD
 
         DrawTextureRec(MiniMapRenderTexture.texture, Rectangle{ 0,0, float(MiniMapRenderTexture.texture.width), -float(MiniMapRenderTexture.texture.height) }, Vector2{ float(GetScreenWidth() - MiniMapRenderTexture.texture.width), 0 }, WHITE);
 
-        DrawFPS(0, 0);
+        DrawFPS(10, 10);
+
+        DrawText("WADS to move, left click to shoot", 100, 10, 10, BLACK);
+#ifdef _DEBUG
+        DrawText("Hold Right Mouse to Rotate View", 100, 20, 10, BLACK);
+#endif // _DEBUG
     }
 }
