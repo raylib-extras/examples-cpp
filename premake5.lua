@@ -5,21 +5,27 @@ newoption
     value = "OPENGL_VERSION",
     description = "version of OpenGL to build raylib against",
     allowed = {
-	    { "opengl11", "OpenGL 1.1"},
-	    { "opengl21", "OpenGL 2.1"},
-	    { "opengl33", "OpenGL 3.3"},
-	    { "opengl43", "OpenGL 4.3"}
+        { "opengl11", "OpenGL 1.1"},
+        { "opengl21", "OpenGL 2.1"},
+        { "opengl33", "OpenGL 3.3"},
+        { "opengl43", "OpenGL 4.3"}
     },
     default = "opengl33"
 }
 
-function define_C()
-    language "C"
-end
+newoption
+{
+    trigger = "platform",
+    value = "PLATFORM",
+    description = "platform for raylib to target",
+    allowed = {
+        { "desktop_glfw", "Desktop GLFW"},
+        { "desktop_sdl", "Desktop SDL"},
+        { "drm", "DRM"},
+    },
+    default = "desktop_glfw"
+}
 
-function define_Cpp()
-    language "C++"
-end
 
 function string.starts(String,Start)
     return string.sub(String,1,string.len(Start))==Start
@@ -27,7 +33,8 @@ end
 
 function link_to(lib)
     links (lib)
-    includedirs ("../"..lib,"../"..lib.."/include" )
+    includedirs ("../"..lib.."/include")
+    includedirs ("../"..lib.."/" )
 end
 
 function download_progress(total, current)
@@ -35,7 +42,7 @@ function download_progress(total, current)
     ratio = math.min(math.max(ratio, 0), 1);
     local percent = math.floor(ratio * 100);
     print("Download progress (" .. percent .. "%/100%)")
-  end
+end
 
 function check_raylib()
     if(os.isdir("raylib") == false and os.isdir("raylib-master") == false) then
@@ -52,79 +59,55 @@ function check_raylib()
     end
 end
 
-function check_box2d()
-    if(os.isdir(".box2d") == false and os.isdir("box2d-main") == false) then
-        if(not os.isfile("box2d-main.zip")) then
-            print("box2d not found, downloading from github")
-            local result_str, response_code = http.download("https://github.com/erincatto/box2d/archive/refs/heads/main.zip", "box2d-main.zip", {
-                progress = download_progress,
-                headers = { "From: Premake", "Referer: Premake" }
-            })
-        end
-        print("Unzipping to " ..  os.getcwd())
-        zip.extract("box2d-main.zip", os.getcwd())
-        os.remove("box2d-main.zip")
-    end
+workspaceName = path.getbasename(os.getcwd())
+
+if (string.lower(workspaceName) == "raylib") then
+    print("raylib is a reserved name. Name your project directory something else.")
+    -- Project generation will succeed, but compilation will definitely fail, so just abort here.
+    os.exit()
 end
 
-function defineWorkspace(baseName)
-    workspace (baseName)
-        configurations { "Debug", "Release"}
-        platforms { "x64", "x86"}
+workspace (workspaceName)
+    configurations { "Debug", "Release"}
+    platforms { "x64", "x86", "ARM64"}
+	
+	defaultplatform ("x64")
 
-        filter "configurations:Debug"
-            defines { "DEBUG" }
-            symbols "On"
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        symbols "On"
 
-        filter "configurations:Release"
-            defines { "NDEBUG" }
-            optimize "On"
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        optimize "On"
 
-        filter { "platforms:x64" }
-            architecture "x86_64"
-
-        filter {}
-        
-        targetdir "_bin/%{cfg.buildcfg}/"
-
-        startproject(baseName)
-
-    defineRaylibProject()
-
-    project (baseName)
-        kind "ConsoleApp"
-        location "_build"
-        targetdir "_bin/%{cfg.buildcfg}"
-
-        filter "action:vs*"
-            debugdir "$(SolutionDir)"
+    filter { "platforms:x64" }
+        architecture "x86_64"
 		
-	    filter {"action:vs*", "configurations:Release"}
-            kind "WindowedApp"
-            entrypoint "mainCRTStartup"
-            
-        filter{}
+	filter { "platforms:Arm64" }
+        architecture "ARM64"
 
-        vpaths 
-        {
-            ["Header Files/*"] = { "include/**.h",  "include/**.hpp", "src/**.h", "src/**.hpp", "**.h", "**.hpp"},
-            ["Source Files/*"] = {"src/**.c", "src/**.cpp","**.c", "**.cpp"},
-        }
-        files {"**.c", "**.cpp", "**.h", "**.hpp"}
+    filter {}
 
-        includedirs { "./"}
-        includedirs { "./src"}
-        includedirs { "./include"}
-        link_raylib();
-end
+    targetdir "bin/%{cfg.buildcfg}/"
+
+    if(os.isdir("game")) then
+        startproject(workspaceName)
+    end
+
+    cdialect "C99"
+    cppdialect "C++17"
+check_raylib();
 
 include ("raylib_premake5.lua")
-check_raylib()
-check_box2d()
+
+if(os.isdir("game")) then
+    include ("game")
+end
 
 folders = os.matchdirs("*")
 for _, folderName in ipairs(folders) do
-    if (string.starts(folderName, "raylib") == false and string.starts(folderName, "_") == false and string.starts(folderName, ".") == false) then
+    if (string.starts(folderName, "raylib") == false and string.starts(folderName, ".") == false) then
         if (os.isfile(folderName .. "/premake5.lua")) then
             print(folderName)
             include (folderName)
