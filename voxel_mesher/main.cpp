@@ -505,6 +505,7 @@ int main()
 	
 	UnloadMesh(mesh);
 	UnloadRenderTexture(tileTexture);
+	UnloadShader(shader);
 	CloseWindow();
 	return 0;
 }
