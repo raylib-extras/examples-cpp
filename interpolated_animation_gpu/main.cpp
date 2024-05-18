@@ -253,7 +253,7 @@ public:
 
         QuaternionToAxisAngle(Orientation, &axis, &angle);
 
-        DrawModelEx(SourceModel.BaseModel, Position, axis, angle, Vector3{1,1,1}, Tint);
+        DrawModelEx(SourceModel.BaseModel, Position, axis, angle * RAD2DEG, Vector3{1,1,1}, Tint);
     }
 };
 
@@ -281,8 +281,8 @@ void AddInstance()
     GPUAnimatedModelInstance& newInstnace = Instances[Instances.size() - 1];
     newInstnace.Position.x = x * spacing;
     newInstnace.Position.z = y * spacing;
-
     newInstnace.Orientation = QuaternionFromEuler(0, GetRandomValue(-180, 180) * DEG2RAD, 0);
+
     newInstnace.CurrentAnimation = GetRandomValue(0, int(TheModel.Animations.size()) - 1);
 }
 
