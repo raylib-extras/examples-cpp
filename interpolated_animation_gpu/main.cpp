@@ -48,27 +48,6 @@ void SetUniformMatrixTransposeV(Shader& shader, int locIndex, Matrix* mats, int 
 #endif
 }
 
-// Unload mesh from VRAM only, keep RAM data.
-void UnloadMeshNoFree(Mesh& mesh)
-{
-    // just unload the GPU buffers
-    rlUnloadVertexArray(mesh.vaoId);
-
-    if (mesh.vboId != NULL)
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            rlUnloadVertexBuffer(mesh.vboId[i]);
-        }
-    }
-
-    RL_FREE(mesh.vboId);
-
-    mesh.vboId = nullptr;
-    mesh.vaoId = 0;
-}
-
-
 // animation classes
 class AnimationShader
 {
@@ -116,11 +95,24 @@ public:
         {
             Mesh& mesh = BaseModel.meshes[i];
 
-            // unload the old mesh, because we are going to upload a new one with more buffers.
-            UnloadMeshNoFree(mesh);
-
             mesh.tangents = (float*)MemAlloc(sizeof(float) * 4 * mesh.vertexCount);
             memcpy(mesh.tangents, mesh.boneWeights, sizeof(float) * 4 * mesh.vertexCount);
+
+            if (mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT] != 0)
+            {
+                // Update existing vertex buffer
+                rlUpdateVertexBuffer(mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT], mesh.tangents, mesh.vertexCount * 4 * sizeof(float), 0);
+            }
+            else
+            {
+                // Load a new tangent attributes buffer
+                mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT] = rlLoadVertexBuffer(mesh.tangents, mesh.vertexCount * 4 * sizeof(float), false);
+            }
+
+            rlEnableVertexArray(mesh.vaoId);
+            rlSetVertexAttribute(RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT, 4, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(RL_DEFAULT_SHADER_ATTRIB_LOCATION_TANGENT);
+            rlDisableVertexArray();
 
             mesh.texcoords2 = (float*)MemAlloc(sizeof(float) * 2 * mesh.vertexCount);
             for (int vert = 0; vert < mesh.vertexCount; vert++)
@@ -130,7 +122,22 @@ public:
                 mesh.texcoords2[vert * 2 + 0] = u;
                 mesh.texcoords2[vert * 2 + 1] = v;
             }
-            UploadMesh(&mesh, false);
+
+            if (mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2] != 0)
+            {
+                // Update existing vertex buffer
+                rlUpdateVertexBuffer(mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2], mesh.texcoords2, mesh.vertexCount * 2 * sizeof(float), 0);
+            }
+            else
+            {
+                // Load a new tangent attributes buffer
+                mesh.vboId[RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2] = rlLoadVertexBuffer(mesh.texcoords2, mesh.vertexCount * 2 * sizeof(float), false);
+            }
+
+            rlEnableVertexArray(mesh.vaoId);
+            rlSetVertexAttribute(RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2, 2, RL_FLOAT, 0, 0, 0);
+            rlEnableVertexAttribute(RL_DEFAULT_SHADER_ATTRIB_LOCATION_TEXCOORD2);
+            rlDisableVertexArray();
         }
 
         for (int shader = 0; shader < BaseModel.materialCount; shader++)
@@ -168,11 +175,11 @@ public:
 
     int CurrentAnimation = 0;
     int CurrentFrame = 0;
-    int NextFrame = 0;
+    int NextFrame = 1;
 
     float CurrentFrameTime = 0;
 
-    float AnimationFPS = 1.0f / 15.0f;
+    float AnimationFPS = 1.0f / 30.0f;
 
     std::vector<Matrix> BoneTransforms;
 
