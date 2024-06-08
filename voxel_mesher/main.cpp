@@ -131,7 +131,7 @@ public:
 			SetSetUV(uvRect.x, uvRect.height);
 			PushVertex(position, 0, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.y);
+			SetSetUV(uvRect.width, uvRect.height);
 			PushVertex(position, 1, 1, 0);
 		}
 		
