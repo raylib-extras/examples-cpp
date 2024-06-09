@@ -70,7 +70,7 @@ public:
 
 	inline void PushVertex(Vector3& vertex, float xOffset = 0, float yOffset = 0, float zOffset = 0)
 	{ 
-		size_t index = TriangleIndex * 12 + VertIndex * 3;
+		size_t index = TriangleIndex * 12 + VertIndex * 4;
 
 		if (MeshRef.colors != nullptr)
 		{
@@ -79,6 +79,8 @@ public:
 			MeshRef.colors[index + 2] = VertColor.b;
 			MeshRef.colors[index + 3] = VertColor.a;
 		}
+
+		index = TriangleIndex * 12 + VertIndex * 3;
 
 		if (MeshRef.texcoords != nullptr)
 		{
