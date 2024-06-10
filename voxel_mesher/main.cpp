@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
+#include "rcamera.h"
 
 // lighting
 #define RLIGHTS_IMPLEMENTATION
@@ -70,17 +71,16 @@ public:
 
 	inline void PushVertex(Vector3& vertex, float xOffset = 0, float yOffset = 0, float zOffset = 0)
 	{ 
-		size_t index = TriangleIndex * 12 + VertIndex * 4;
+		size_t index = 0;
 
 		if (MeshRef.colors != nullptr)
 		{
+			index = TriangleIndex * 12 + VertIndex * 4;
 			MeshRef.colors[index] = VertColor.r;
 			MeshRef.colors[index + 1] = VertColor.g;
 			MeshRef.colors[index + 2] = VertColor.b;
 			MeshRef.colors[index + 3] = VertColor.a;
 		}
-
-		index = TriangleIndex * 12 + VertIndex * 3;
 
 		if (MeshRef.texcoords != nullptr)
 		{
@@ -271,7 +271,7 @@ protected:
 // build a simple random voxel chunk
 void BuildChunk()
 {
-	// fill the chunk with layers of blocks
+	//fill the chunk with layers of blocks
 	for (int d = 0; d < ChunkDepth; d++)
 	{
 		char block = 0;
@@ -285,20 +285,20 @@ void BuildChunk()
 					block = -1;
 			}
 		}
-
+	
 		for (int v = 0; v < ChunkSize; v++)
 		{
 			for (int h = 0; h < ChunkSize; h++)
 			{
 				int index = GetIndex(h, v, d);
-
+	
 				VoxelChunk[index] = block;
 			}
 		}
 	}
 
 	// Remove some chunks 
-	for (int i = 0; i < 500; i++)
+	for (int i = 0; i < 600; i++)
 	{
 		int h = GetRandomValue(0, ChunkSize-1);
 		int v = GetRandomValue(0, ChunkSize-1);
@@ -337,9 +337,9 @@ bool BlockIsSolid(int h, int v, int d)
 }
 
 //check all the adjacent blocks to see if they are open, if they are, we need a face for that side of the block.
-size_t GetChunkFaceCount()
+int GetChunkFaceCount()
 {
-	size_t count = 0;
+	int count = 0;
 	for (int d = 0; d < ChunkDepth; d++)
 	{
 		for (int v = 0; v < ChunkSize; v++)
@@ -444,6 +444,10 @@ int main()
 
 	camera.fovy = 45;
 	camera.up.y = 1;
+	camera.target.x = 8;
+	camera.target.z = 8;
+	camera.target.y = 4;
+
     camera.position.x = 32;
 	camera.position.z = 32;
 	camera.position.y = 16;
@@ -461,7 +465,6 @@ int main()
 	lights[0] = CreateLight(LIGHT_DIRECTIONAL, Vector3Zero(), Vector3{ -2, -4, -3 }, WHITE, shader);
 	lights[1] = CreateLight(LIGHT_DIRECTIONAL, Vector3Zero(), Vector3{ 2, 2, 5 }, GRAY, shader);
 
-
 	// build a single chunk of voxel data
 	BuildChunk();
 
@@ -476,7 +479,8 @@ int main()
 
 	while (!WindowShouldClose())
 	{
-		camera.position = Vector3Transform(camera.position, MatrixRotateY(GetFrameTime()*DEG2RAD * 15));
+		CameraYaw(&camera, GetFrameTime() * DEG2RAD * 15, true);
+
 		// update lights
 		UpdateLightValues(shader, lights[0]);
 		UpdateLightValues(shader, lights[1]);
