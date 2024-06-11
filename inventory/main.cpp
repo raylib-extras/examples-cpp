@@ -46,6 +46,7 @@ public:
     Size2i Size;
     Color Tint = WHITE;
     Size2i BackPackLocation;
+    Rectangle SourceRect = { 0 };
     int Id = 0;
 };
 
@@ -172,6 +173,8 @@ public:
 
 Inventory PlayerInventory(Size2i{ 8,4 });
 
+Texture ItemSheet = { 0 };
+
 void DrawItem(Item* item, Rectangle rect, float gutter)
 {
     if (item == nullptr)
@@ -182,6 +185,7 @@ void DrawItem(Item* item, Rectangle rect, float gutter)
     rect.width -= gutter * 4;
     rect.height -= gutter * 4;
     DrawRectangleRec(rect, ColorAlpha(item->Tint, 0.9f));
+    DrawTexturePro(ItemSheet, item->SourceRect, rect, Vector2Zero(), 0, WHITE);
     DrawText(TextFormat("%d", item->Id), (int)rect.x + 2, (int)rect.y + 2, 20, BLACK);
 }
 
@@ -253,6 +257,7 @@ bool AddItem(Item& baseItem)
     item->Size.x = baseItem.Size.x;
     item->Size.y = baseItem.Size.y;
     item->Tint = baseItem.Tint;
+    item->SourceRect = baseItem.SourceRect;
 
     auto pos = PlayerInventory.FindAvailableSlot(item);
     if (!PlayerInventory.InsertItem(pos, item))
@@ -269,6 +274,7 @@ void DrawItemList()
     {
         Rectangle rec = { (float)baseItem.BackPackLocation.x, (float)baseItem.BackPackLocation.y, baseItem.Size.x * 45.0f, baseItem.Size.y * 45.0f };
         DrawRectangleRec(rec, baseItem.Tint);
+        DrawTexturePro(ItemSheet, baseItem.SourceRect, rec, Vector2Zero(), 0, WHITE);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rec))
             AddItem(baseItem);
     }
@@ -277,10 +283,13 @@ void DrawItemList()
 
 void GameInit()
 {
-    BaseItems.push_back(Item{ Size2i{1,1}, DARKGREEN, Size2i{600,400} });
-    BaseItems.push_back(Item{ Size2i{1,2}, PURPLE , Size2i{ 650,400 } });
-    BaseItems.push_back(Item{ Size2i{2, 1}, MAROON , Size2i{ 700,400 } });
-    BaseItems.push_back(Item{ Size2i{2,2}, ORANGE , Size2i{ 700,450 } });
+    float grid = 256.0f / 3.0f;
+
+    ItemSheet = LoadTexture("resources/Items.png");
+    BaseItems.push_back(Item{ Size2i{1,1}, DARKGREEN, Size2i{600,400}, Rectangle{0, 0 ,grid,grid} });
+    BaseItems.push_back(Item{ Size2i{1,2}, PURPLE   , Size2i{650,400}, Rectangle{0,grid,grid,grid *2} });
+    BaseItems.push_back(Item{ Size2i{2,1}, MAROON   , Size2i{700,400}, Rectangle{grid,0,grid*2,grid} });
+    BaseItems.push_back(Item{ Size2i{2,2}, ORANGE   , Size2i{700,450}, Rectangle{grid,grid,grid * 2,grid * 2} });
 
     AddItem(BaseItems[1]);
 }
