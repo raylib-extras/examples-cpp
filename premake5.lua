@@ -119,6 +119,8 @@ function defineWorkspace(baseName)
 end
 
 include ("raylib_premake5.lua")
+cdialect "C99"
+cppdialect "C++17"
 check_raylib()
 check_box2d()
 
