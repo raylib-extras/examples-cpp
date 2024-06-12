@@ -173,7 +173,11 @@ public:
 
 Inventory PlayerInventory(Size2i{ 8,4 });
 
+Rectangle InventoryBounds = { 50, 50, 600,300 };
+
 Texture ItemSheet = { 0 };
+
+Item* DraggedItem = nullptr;
 
 void DrawItem(Item* item, Rectangle rect, float gutter)
 {
@@ -185,7 +189,11 @@ void DrawItem(Item* item, Rectangle rect, float gutter)
     rect.width -= gutter * 4;
     rect.height -= gutter * 4;
     DrawRectangleRec(rect, ColorAlpha(item->Tint, 0.9f));
-    DrawTexturePro(ItemSheet, item->SourceRect, rect, Vector2Zero(), 0, WHITE);
+    float alpha = 1.0f;
+    if (item == DraggedItem)
+        alpha = 0.75f;
+
+    DrawTexturePro(ItemSheet, item->SourceRect, rect, Vector2Zero(), 0, ColorAlpha(WHITE,alpha));
     DrawText(TextFormat("%d", item->Id), (int)rect.x + 2, (int)rect.y + 2, 20, BLACK);
 }
 
@@ -198,23 +206,28 @@ Rectangle ComputeBackpackRect(Size2i position, const Rectangle& bounds, float gu
     return itemRect;
 }
 
-Rectangle ComputeItemRect(Item* item, const Rectangle& bounds, float gutter)
+Rectangle ComputeItemRect(Size2i position, Item* item, const Rectangle& bounds, float gutter)
 {
     float itemWidth = ((bounds.width - gutter * 2) / PlayerInventory.GetBackpackSize().x);
     float itemHeight = ((bounds.height - gutter * 2) / PlayerInventory.GetBackpackSize().y);
 
     Rectangle itemRect;
-    itemRect.x = bounds.x + gutter + item->BackPackLocation.x * itemWidth;
-    itemRect.y = bounds.y + gutter + item->BackPackLocation.y * itemHeight;
+    itemRect.x = bounds.x + gutter + position.x * itemWidth;
+    itemRect.y = bounds.y + gutter + position.y * itemHeight;
     itemRect.width = (item->Size.x) * itemWidth - gutter;
     itemRect.height = (item->Size.y) * itemHeight - gutter;
 
     return itemRect;
 }
 
+Rectangle ComputeItemRect(Item* item, const Rectangle& bounds, float gutter)
+{
+    return ComputeItemRect(item->BackPackLocation, item, bounds, gutter);
+}
+
 void DrawInventory(const Rectangle& bounds)
 {
-    DrawText("Inventory: right click item to remove it", (int)bounds.x, (int)bounds.y - 20, 20, BLACK);
+    DrawText("Inventory: right click item to remove it, Drag to move or drop", (int)bounds.x, (int)bounds.y - 20, 20, BLACK);
     DrawRectangleRec(bounds, BROWN);
     DrawRectangleLinesEx(bounds, 2, DARKBROWN);
 
@@ -233,13 +246,22 @@ void DrawInventory(const Rectangle& bounds)
 
     int toRemove = -1;
 
-    for (const auto&[id, item] : PlayerInventory.GetItems())
+    for (auto&[id, item] : PlayerInventory.GetItems())
     {
         Rectangle itemRect = ComputeItemRect(item, bounds, gutter);
         DrawItem(item, itemRect, gutter);
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), itemRect))
-            toRemove = id;
+        if (CheckCollisionPointRec(GetMousePosition(), itemRect))
+        {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+            {
+                toRemove = id;
+            }
+            else if (!DraggedItem && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            {
+                DraggedItem = item;
+            }
+        }
     }
 
     if (toRemove != -1)
@@ -275,10 +297,45 @@ void DrawItemList()
         Rectangle rec = { (float)baseItem.BackPackLocation.x, (float)baseItem.BackPackLocation.y, baseItem.Size.x * 45.0f, baseItem.Size.y * 45.0f };
         DrawRectangleRec(rec, baseItem.Tint);
         DrawTexturePro(ItemSheet, baseItem.SourceRect, rec, Vector2Zero(), 0, WHITE);
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rec))
-            AddItem(baseItem);
+        if (CheckCollisionPointRec(GetMousePosition(), rec))
+        {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+            {
+                AddItem(baseItem);
+            }
+            else if (DraggedItem == nullptr && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            {
+                DraggedItem = new Item();
+                DraggedItem->Size = baseItem.Size;
+                DraggedItem->SourceRect = baseItem.SourceRect;
+                DraggedItem->Id = -1;
+                DraggedItem->Tint = baseItem.Tint;
+            }
+        }
     }
-    DrawText("Click to add to inventory", 600, 380, 20, BLACK);
+    DrawText("Right Click to add to inventory, or drag", 600, 380, 20, BLACK);
+}
+
+Size2i GetMouseSlot()
+{
+    Size2i slot = { -1,-1 };
+    Vector2 mouse = GetMousePosition();
+    if (mouse.x < InventoryBounds.x || mouse.x > InventoryBounds.x + InventoryBounds.width)
+        return slot;
+
+    if (mouse.y < InventoryBounds.y || mouse.y > InventoryBounds.y + InventoryBounds.height)
+        return slot;
+
+    float itemWidth = ((InventoryBounds.width) / PlayerInventory.GetBackpackSize().x);
+    float itemHeight = ((InventoryBounds.height) / PlayerInventory.GetBackpackSize().y);
+
+    mouse.x -= InventoryBounds.x;
+    mouse.y -= InventoryBounds.y;
+
+    slot.x = (int)(mouse.x / itemWidth);
+    slot.y = (int)(mouse.y / itemHeight);
+
+    return slot;
 }
 
 void GameInit()
@@ -296,14 +353,65 @@ void GameInit()
 
 bool GameUpdate()
 {
+    if (DraggedItem != nullptr)
+    {
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            Size2i slot = GetMouseSlot();
+            if (slot.x >= 0)
+            {
+                if (PlayerInventory.ItemCanFit(slot, DraggedItem))
+                {
+                    PlayerInventory.RemoveItem(DraggedItem->Id);
+                    PlayerInventory.InsertItem(slot, DraggedItem);
+                }
+            }
+            else
+            {
+                if (DraggedItem->Id >= 0)
+                    PlayerInventory.RemoveItem(DraggedItem->Id);
+                delete(DraggedItem);
+            }
+
+            DraggedItem = nullptr;
+        }
+            
+    }
     return true;
+}
+
+void DrawDraggedItem()
+{
+    if (DraggedItem != nullptr)
+    {
+        Rectangle mouseRect = { GetMousePosition().x - DraggedItem->SourceRect.width * 0.25f, GetMousePosition().y - DraggedItem->SourceRect.height * 0.15f, DraggedItem->SourceRect.width, DraggedItem->SourceRect.height };
+
+        Color tint = RED;
+        Size2i slot = GetMouseSlot();
+        if (slot.x >= 0)
+        {
+            if (PlayerInventory.ItemCanFit(slot, DraggedItem))
+            {
+                tint = WHITE;
+
+                Rectangle itemRect = ComputeItemRect(slot, DraggedItem, InventoryBounds, 0);
+                DrawRectangleRec(itemRect, ColorAlpha(GREEN, 0.5f));
+            }
+            else
+            {
+                tint = ORANGE;
+            }
+        }
+
+        DrawTexturePro(ItemSheet, DraggedItem->SourceRect, mouseRect, Vector2Zero(), 0, ColorAlpha(tint, 0.8f));
+    }
 }
 
 void Draw2D()
 {
-    Rectangle inventorybounds = { 50, 50, 600,300 };
-    DrawInventory(inventorybounds);
+    DrawInventory(InventoryBounds);
     DrawItemList();
+    DrawDraggedItem();
 }
 
 void GameDraw()
