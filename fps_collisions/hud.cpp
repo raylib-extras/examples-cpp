@@ -37,13 +37,13 @@ namespace HUD
 
     void SetupGraphics()
     {
-        if (!IsRenderTextureReady(MiniMapRenderTexture))
+        if (!IsRenderTextureValid(MiniMapRenderTexture))
             MiniMapRenderTexture = LoadRenderTexture(MiniMapSize, MiniMapSize);
     }
 
     void CleanupGraphics()
     {
-        if (IsRenderTextureReady(MiniMapRenderTexture))
+        if (IsRenderTextureValid(MiniMapRenderTexture))
            UnloadRenderTexture(MiniMapRenderTexture);
 
         MiniMapRenderTexture.id = 0;

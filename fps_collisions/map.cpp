@@ -134,7 +134,7 @@ void Map::SetupGraphics()
 
 void Map::CleanupGraphics()
 {
-    if (!IsShaderReady(WallMaterial.shader))
+    if (!IsShaderValid(WallMaterial.shader))
         return;
 
     UnloadShader(WallMaterial.shader);
@@ -207,7 +207,7 @@ bool Map::CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle*
 
 void Map::Draw(Camera3D &view)
 {
-    if (!IsTextureReady(PlaneMaterial.maps[MATERIAL_MAP_ALBEDO].texture))
+    if (!IsTextureValid(PlaneMaterial.maps[MATERIAL_MAP_ALBEDO].texture))
         return;
 
     float cameraPos[3] = { view.position.x, view.position.y, view.position.z };
@@ -241,7 +241,7 @@ void Map::Draw(Camera3D &view)
 
 void Map::DrawWalls(Camera3D& view)
 {
-    if (!IsTextureReady(WallMaterial.maps[MATERIAL_MAP_ALBEDO].texture))
+    if (!IsTextureValid(WallMaterial.maps[MATERIAL_MAP_ALBEDO].texture))
         return;
 
     float cameraPos[3] = { view.position.x, view.position.y, view.position.z };

@@ -49,7 +49,7 @@ public:
 	virtual ~GunPart()
 	{
 		// really should be part of a sprite sheet, but whatever
-		if (IsTextureReady(Texture))
+		if (IsTextureValid(Texture))
 			UnloadTexture(Texture);
 	}
 };
@@ -234,7 +234,7 @@ bool GameUpdate()
 		rebuildGun = true;
         GunIndex--;
         if (GunIndex < 0)
-            GunIndex = Guns.size()-1;
+            GunIndex = int(Guns.size()-1);
     }
 
     // cycle barrel modes
@@ -251,7 +251,7 @@ bool GameUpdate()
 		rebuildGun = true;
 		BarrelIndex--;
         if (BarrelIndex < -1)
-			BarrelIndex = BarrelMods.size() - 1;
+			BarrelIndex = int(BarrelMods.size() - 1);
     }
 
     // cycle scopes
@@ -268,7 +268,7 @@ bool GameUpdate()
         rebuildGun = true;
 		ScopeIndex--;
         if (ScopeIndex < -1)
-			ScopeIndex = Scopes.size() - 1;
+			ScopeIndex = int(Scopes.size() - 1);
     }
 
 	if (rebuildGun)

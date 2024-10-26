@@ -82,7 +82,7 @@ int main(void)
     Camera2D cam = { 0 };
     cam.zoom = 1;
     cam.offset.x = 20;
-    cam.offset.y = GetScreenHeight() - 50;
+    cam.offset.y = GetScreenHeight() - 50.0f;
     cam.target.x = 0;
     cam.target.y = 0;
 
@@ -279,7 +279,7 @@ int main(void)
         BeginDrawing();
             ClearBackground(SKYBLUE);
             BeginMode2D(cam);
-                DrawRectangle(cam.target.x - cam.offset.x, 0, GetScreenWidth(), 50, BROWN);
+                DrawRectangle((int)(cam.target.x - cam.offset.x), 0, GetScreenWidth(), 50, BROWN);
 
                 for (Rectangle& rect : Obstacles)
                 {

@@ -40,7 +40,7 @@ void PlayerInfo::SetupGraphics()
 
 void PlayerInfo::CleanupGraphics()
 {
-    if (IsModelReady(GunMesh))
+    if (IsModelValid(GunMesh))
         UnloadModel(GunMesh);
 }
 

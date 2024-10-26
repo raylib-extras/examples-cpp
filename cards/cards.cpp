@@ -356,7 +356,7 @@ int main()
 		BeginDrawing();
 		ClearBackground(DARKGREEN);
 
-		DrawText("DECK", DrawDeck.Pos.x, DrawDeck.Pos.y - 40, 20, PINK);
+		DrawText("DECK", int(DrawDeck.Pos.x), int(DrawDeck.Pos.y - 40), 20, PINK);
 		DrawDeck.Draw();
 		PlayerHand.Draw();
 
