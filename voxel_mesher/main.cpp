@@ -118,70 +118,70 @@ public:
 		if (faces[NorthFace])
 		{
 			SetNormal( 0, 0, -1 );
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position);
 
-			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 0);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 1, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 1, 0, 0);
+            SetSetUV(uvRect.x, uvRect.height);
+            PushVertex(position, 1, 0, 0);
 
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position);
 
-			SetSetUV(uvRect.x, uvRect.height);
-			PushVertex(position, 0, 1, 0);
+            SetSetUV(uvRect.width, uvRect.y);
+            PushVertex(position, 0, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 0);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 1, 1, 0);
 		}
 		
 		// z+
 		if (faces[SouthFace])
 		{
 			SetNormal(0, 0 ,1);
-
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 0, 0, 1);
-
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 1, 0, 1);
-
+            
 			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 1);
+            PushVertex(position, 0, 0, 1);
 
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 0, 0, 1);
+            SetSetUV(uvRect.x, uvRect.height);
+            PushVertex(position, 1, 0, 1);
 
-			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 1);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 1, 1, 1);
 
-			SetSetUV(uvRect.x, uvRect.height);
-			PushVertex(position, 0, 1, 1);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position, 0, 0, 1);
+
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 1, 1, 1);
+
+            SetSetUV(uvRect.width, uvRect.y);
+            PushVertex(position, 0, 1, 1);
 		}
 
 		// x+
 		if (faces[WestFace])
 		{
 			SetNormal(1, 0, 0 );
-			SetSetUV(uvRect.x, uvRect.height);
- 			PushVertex(position, 1, 0, 1);
+            SetSetUV(uvRect.x, uvRect.height);
+            PushVertex(position, 1, 0, 1);
 
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 1, 0, 0);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position, 1, 0, 0);
 
-			SetSetUV(uvRect.width, uvRect.y);
- 			PushVertex(position, 1, 1, 0);
+            SetSetUV(uvRect.width, uvRect.y);
+            PushVertex(position, 1, 1, 0);
 
-			SetSetUV(uvRect.x, uvRect.height);
- 			PushVertex(position, 1, 0, 1);
+            SetSetUV(uvRect.x, uvRect.height);
+            PushVertex(position, 1, 0, 1);
 
-			SetSetUV(uvRect.width, uvRect.y);
- 			PushVertex(position, 1, 1, 0);
+            SetSetUV(uvRect.width, uvRect.y);
+            PushVertex(position, 1, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.height);
- 			PushVertex(position, 1, 1, 1);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 1, 1, 1);
 		}
 
 		// x-
@@ -189,23 +189,23 @@ public:
 		{
 			SetNormal(-1, 0, 0);
 
-			SetSetUV(uvRect.x, uvRect.height);
-			PushVertex(position, 0, 0, 1);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position, 0, 0, 1);
 
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 0, 1, 0);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 0, 1, 0);
 
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 0, 0, 0);
+            SetSetUV(uvRect.x, uvRect.height);
+            PushVertex(position, 0, 0, 0);
 
-			SetSetUV(uvRect.x, uvRect.height);
-			PushVertex(position, 0, 0, 1);
+            SetSetUV(uvRect.width, uvRect.height);
+            PushVertex(position, 0, 0, 1);
 
-			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 0, 1, 1);
+            SetSetUV(uvRect.width, uvRect.y);
+            PushVertex(position, 0, 1, 1);
 
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 0, 1, 0);
+            SetSetUV(uvRect.x, uvRect.y);
+            PushVertex(position, 0, 1, 0);
 		}
 
 		if (faces[UpFace])
