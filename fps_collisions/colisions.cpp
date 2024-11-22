@@ -29,6 +29,7 @@
 #include <limits>
 
 #include "collisions.h"
+#include "raylib.h"
 #include "raymath.h"
 
 // check if a cylinder hits a bounding box

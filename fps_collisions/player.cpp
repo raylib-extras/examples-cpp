@@ -28,6 +28,7 @@
 
 #include "player.h"
 #include "map.h"
+#include "raymath.h"
 
 Model GunMesh = { 0 };
 
@@ -50,7 +51,12 @@ void PlayerInfo::Setup()
     PlayerNode.AddChild(CameraNode);
     CameraNode.MoveV(2);
 
-    CameraNode.AddChild(GunNode);
+    PlayerNode.AddChild(ShoulderNode);
+
+    // move the pivot of the gun down a little so it's not attached to the center of our head
+    ShoulderNode.MoveV(1.85f);
+
+    ShoulderNode.AddChild(GunNode);
 
     GunNode.SetPosition(PlayerInfo::GunDefaultH, PlayerInfo::GunDefaultV, PlayerInfo::GunDefaultD);
 
@@ -89,6 +95,7 @@ void PlayerInfo::Update(Map& map)
             TitltAngle = -maxViewAngle;
 
         CameraNode.SetOrientation(Vector3{ TitltAngle,0,0 });
+        ShoulderNode.SetOrientation(Vector3{ TitltAngle,0,0 });
 
         // get the input movement
         Vector2 wadsVector = { 0 };
@@ -128,10 +135,10 @@ void PlayerInfo::Update(Map& map)
     // update the camera with the new view.
     CameraNode.SetCamera(ViewCamera);
 
-    // raycast from the gun into the world to see what it would hit
+    // raycast from the view into the world to see what it would hit
     Ray gunRay = { 0 };
-    gunRay.position = Vector3Transform(Vector3Zero(), GunNode.GetWorldMatrix());
-    gunRay.direction = Vector3Subtract(Vector3Transform(Vector3{ 0,0,1 }, GunNode.GetWorldMatrix()), gunRay.position);
+    gunRay.position = Vector3Transform(Vector3Zero(), CameraNode.GetWorldMatrix());
+    gunRay.direction = Vector3Subtract(Vector3Transform(Vector3{ 0,0,1 }, CameraNode.GetWorldMatrix()), gunRay.position);
 
     map.CollideRay(gunRay, LastGunCollision);   // optional, if you need to know what you hit, you can pass a pointer in here that will be set with the wall that is hit
 
@@ -166,8 +173,12 @@ void PlayerInfo::Draw()
 
     DrawModel(GunMesh, Vector3Zero(), 1, WHITE);
 
-    // laser out of gun
-    DrawLine3D(Vector3Zero(), Vector3{ 0, 0, 100 }, RED);
+	rlBegin(RL_LINES);
+	rlColor4f(1,0,0,1);
+	rlVertex3f(Vector3Zeros.x, Vector3Zeros.y, Vector3Zeros.z);
+    rlColor4f(1, 0, 0, 0);
+	rlVertex3f(0,0, 3);
+	rlEnd();
 
     GunNode.PopMatrix();
 }
