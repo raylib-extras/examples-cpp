@@ -16,6 +16,7 @@ char VoxelChunk[ChunkSize * ChunkSize * ChunkDepth] = { 0 };
 
 // texture rectangles for various block colors
 Rectangle BlockColors[4] = { Rectangle{0,0,0.25f,1}, Rectangle{0.25f,0,0.5f,1}, Rectangle{0.5f,0,0.75f,1}, Rectangle{0.75f,0,1,1} };
+Color BlockTints[4] = { WHITE, WHITE, WHITE, WHITE };
 
 // get the index into the voxel array for a h,v,d coordinate
 int GetIndex(int h, int v, int d)
@@ -44,7 +45,7 @@ public:
 
 	// we need to know how many triangles are going to be in the mesh before we start
 	// this way we can allocate the correct buffer sizes for the mesh
-	void Allocate(int triangles)
+	void Allocate(int triangles, bool useColors = false)
 	{
 		// there are 
 		MeshRef.vertexCount = triangles * 6;
@@ -53,7 +54,7 @@ public:
 		MeshRef.vertices = static_cast<float*>(MemAlloc(sizeof(float) * 3 * MeshRef.vertexCount));
 		MeshRef.normals = static_cast<float*>(MemAlloc(sizeof(float) * 3 * MeshRef.vertexCount));
 		MeshRef.texcoords = static_cast<float*>(MemAlloc(sizeof(float) * 2 * MeshRef.vertexCount));
-		MeshRef.colors = nullptr;	// static_cast<unsigned char*>(MemAlloc(sizeof(unsigned char) * 4 * MeshRef.vertexCount));
+		MeshRef.colors = useColors ? static_cast<unsigned char*>(MemAlloc(sizeof(unsigned char) * 4 * MeshRef.vertexCount)) : nullptr;
 
 		MeshRef.animNormals = nullptr;
 		MeshRef.animVertices = nullptr;
@@ -68,6 +69,8 @@ public:
 	inline void SetNormal(float x, float y, float z) { Normal = Vector3{ x,y,z }; }
 	inline void SetSetUV(Vector2& value) { UV = value; }
 	inline void SetSetUV(float x, float y ) { UV = Vector2{ x,y }; }
+
+	inline void SetColor(Color& value) { VertColor = value; }
 
 	inline void PushVertex(Vector3& vertex, float xOffset = 0, float yOffset = 0, float zOffset = 0)
 	{ 
@@ -113,6 +116,9 @@ public:
 	void AddCube(Vector3&& position, bool faces[6], int block)
 	{
 		Rectangle& uvRect = BlockColors[block];
+
+		SetColor(BlockTints[block]);
+
 		SetSetUV(0,0);
 		//z-
 		if (faces[NorthFace])
@@ -379,7 +385,7 @@ Mesh MeshChunk()
 	CubeGeometryBuilder builder(mesh);
 
 	// figure out how many faces will be in this chunk and allocate a mesh that can store that many
-	builder.Allocate(GetChunkFaceCount());
+	builder.Allocate(GetChunkFaceCount(), true);
 
 	size_t count = 0;
 	for (int d = 0; d < ChunkDepth; d++)
