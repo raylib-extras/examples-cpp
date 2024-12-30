@@ -95,6 +95,29 @@ public:
             Parent->Children.push_back(this);
     }
 
+    inline ObjectTransform* RemoveChild(ObjectTransform* child)
+    {
+        // if the node has no children, return a null pointer
+        if (Children.empty())
+        {
+            return nullptr;
+        }
+
+        // find the child's position in the children list
+        auto childIter = std::find(Children.begin(), Children.end(), child);
+        
+        // if the children list doesn't contain the child, return a nullptr
+        if (childIter == Children.end())
+        {
+            return nullptr;
+        }
+
+        // remove the child
+        Children.erase(childIter);
+
+        return child;
+    }
+
     inline void Detach()
     {
         if (!GetParent())
