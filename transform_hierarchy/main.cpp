@@ -32,6 +32,7 @@
 #include "object_transform.h"
 
 #include <vector>
+#include <iostream>
 #include <list>
 
 ObjectTransform PlayerBase;
@@ -67,6 +68,8 @@ void GameInit()
 	GunModel = LoadModel("resources/blasterD.glb");
 
 	OverlayTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+
+	
 }
 
 bool GameUpdate()
@@ -91,6 +94,9 @@ bool GameUpdate()
 
     if (IsKeyDown(KEY_D))
         PlayerBase.MoveH(GetFrameTime() * -10);
+
+	if (IsKeyPressed(KEY_SPACE))
+		GunNode.Detach();
 
 	return true;
 }
