@@ -44,6 +44,7 @@ struct PlayerInfo
 
     ObjectTransform PlayerNode;
     ObjectTransform CameraNode;
+    ObjectTransform ShoulderNode;
     ObjectTransform GunNode;
 
     Camera3D ViewCamera = { 0 };

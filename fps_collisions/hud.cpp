@@ -86,6 +86,7 @@ namespace HUD
 
         DrawTextureRec(MiniMapRenderTexture.texture, Rectangle{ 0,0, float(MiniMapRenderTexture.texture.width), -float(MiniMapRenderTexture.texture.height) }, Vector2{ float(GetScreenWidth() - MiniMapRenderTexture.texture.width), 0 }, WHITE);
 
+        DrawCircle(GetScreenWidth() / 2, GetScreenHeight() / 2, 2, ColorAlpha(WHITE, 0.75f));
         DrawFPS(10, 10);
 
         DrawText("WADS to move, left click to shoot", 100, 10, 10, BLACK);

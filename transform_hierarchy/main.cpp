@@ -38,6 +38,8 @@ ObjectTransform PlayerBase;
 ObjectTransform CameraNode;
 ObjectTransform GunNode;
 
+RenderTexture OverlayTexture = { 0 };
+
 Model GunModel = { 0 };
 
 void GameInit()
@@ -63,6 +65,8 @@ void GameInit()
 
 	// load a gun model
 	GunModel = LoadModel("resources/blasterD.glb");
+
+	OverlayTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 }
 
 bool GameUpdate()
@@ -113,14 +117,25 @@ void GameDraw()
 	DrawGrid(10, 10);
 	DrawCube(Vector3{ 0,0.5f,10 }, 1, 1, 1, RED);
 
+	EndMode3D();
+
+	// draw the gun to a render texture so that doesn't clip
+	BeginTextureMode(OverlayTexture);
+	ClearBackground(BLANK);
+	BeginMode3D(camera);
 	// push the OpenGL matrix for the gun node in world space
 	// so we can draw the gun there
 	GunNode.PushMatrix();
 	// we are now drawing local to the gun node, this model needs to stick out a little, so we shift it by 1.5 in z
 	DrawModel(GunModel, Vector3{0,0,1.5f}, 1, WHITE);
 	GunNode.PopMatrix();
-
 	EndMode3D();
+
+	// draw a target point
+	DrawCircle(GetScreenWidth() / 2, GetScreenHeight() / 2, 5, ColorAlpha(SKYBLUE, 0.75f));
+	EndTextureMode();
+
+	DrawTextureRec(OverlayTexture.texture, Rectangle{ 0,0,float(GetScreenWidth()), -float(GetScreenHeight()) }, Vector2Zeros, WHITE);
 	EndDrawing();
 }
 

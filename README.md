@@ -55,3 +55,9 @@ Raylib software Raycaster similar to Wolfenstein 3D
 
 ![raycaster](https://user-images.githubusercontent.com/322174/203472549-2918ff06-0cb9-492d-bb8a-85fce61bc108.gif)
 
+# Inventory
+An example of a simple drag and drop inventory system
+
+# Skill Tree
+An example a skill tree type view with pan and zoom using Camera2D
+

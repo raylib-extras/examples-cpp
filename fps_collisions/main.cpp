@@ -37,6 +37,8 @@
 // global player
 PlayerInfo Player;
 
+RenderTexture OverlayTexture = { 0 };
+
 void GameInit(Map &map)
 {
     InitAudioDevice();
@@ -44,6 +46,8 @@ void GameInit(Map &map)
     Map::SetupGraphics();
     PlayerInfo::SetupGraphics();
     HUD::SetupGraphics();
+
+    OverlayTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
     BuildDemoMap(map);
 
@@ -69,15 +73,27 @@ bool GameUpdate(Map& map)
 void Draw3D(Map& map)
 {
     BeginMode3D(Player.ViewCamera);
-
     map.Draw(Player.ViewCamera);
+    EndMode3D();
+
+    BeginTextureMode(OverlayTexture);
+    ClearBackground(BLANK);
+    BeginMode3D(Player.ViewCamera);
     Player.Draw();
 
     EndMode3D();
+    EndTextureMode();
+    DrawTextureRec(OverlayTexture.texture, Rectangle{ 0,0, float(GetScreenWidth()), -float(GetScreenHeight()) }, Vector2Zeros, WHITE);
 }
 
 void GameDraw(Map& map)
 {
+    if (IsWindowResized())
+    {
+        UnloadRenderTexture(OverlayTexture);
+        OverlayTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+    }
+
     BeginDrawing();
     ClearBackground(SKYBLUE);
 
