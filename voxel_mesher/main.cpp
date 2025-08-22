@@ -124,22 +124,22 @@ public:
 		if (faces[NorthFace])
 		{
 			SetNormal( 0, 0, -1 );
-			SetSetUV(uvRect.x, uvRect.y);
+			SetSetUV(uvRect.width, uvRect.height);
 			PushVertex(position);
 
-			SetSetUV(uvRect.width, uvRect.height);
+			SetSetUV(uvRect.x, uvRect.y);
 			PushVertex(position, 1, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.y);
+			SetSetUV(uvRect.x, uvRect.height);
 			PushVertex(position, 1, 0, 0);
 
-			SetSetUV(uvRect.x, uvRect.y);
+			SetSetUV(uvRect.width, uvRect.height);
 			PushVertex(position);
 
-			SetSetUV(uvRect.x, uvRect.height);
+			SetSetUV(uvRect.width, uvRect.y);
 			PushVertex(position, 0, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.height);
+			SetSetUV(uvRect.x, uvRect.y);
 			PushVertex(position, 1, 1, 0);
 		}
 		
@@ -148,22 +148,22 @@ public:
 		{
 			SetNormal(0, 0 ,1);
 
-			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 0, 0, 1);
-
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 1, 0, 1);
-
 			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 1);
-
-			SetSetUV(uvRect.x, uvRect.y);
 			PushVertex(position, 0, 0, 1);
-
-			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 1, 1, 1);
 
 			SetSetUV(uvRect.x, uvRect.height);
+			PushVertex(position, 1, 0, 1);
+
+			SetSetUV(uvRect.x, uvRect.y);
+			PushVertex(position, 1, 1, 1);
+
+			SetSetUV(uvRect.width, uvRect.height);
+			PushVertex(position, 0, 0, 1);
+
+			SetSetUV(uvRect.x, uvRect.y);
+			PushVertex(position, 1, 1, 1);
+
+			SetSetUV(uvRect.width, uvRect.y);
 			PushVertex(position, 0, 1, 1);
 		}
 
@@ -174,7 +174,7 @@ public:
 			SetSetUV(uvRect.x, uvRect.height);
  			PushVertex(position, 1, 0, 1);
 
-			SetSetUV(uvRect.x, uvRect.y);
+			SetSetUV(uvRect.width, uvRect.height);
 			PushVertex(position, 1, 0, 0);
 
 			SetSetUV(uvRect.width, uvRect.y);
@@ -186,7 +186,7 @@ public:
 			SetSetUV(uvRect.width, uvRect.y);
  			PushVertex(position, 1, 1, 0);
 
-			SetSetUV(uvRect.width, uvRect.height);
+			SetSetUV(uvRect.x, uvRect.y);
  			PushVertex(position, 1, 1, 1);
 		}
 
@@ -195,22 +195,22 @@ public:
 		{
 			SetNormal(-1, 0, 0);
 
-			SetSetUV(uvRect.x, uvRect.height);
+			SetSetUV(uvRect.width, uvRect.height);
 			PushVertex(position, 0, 0, 1);
-
-			SetSetUV(uvRect.width, uvRect.y);
-			PushVertex(position, 0, 1, 0);
 
 			SetSetUV(uvRect.x, uvRect.y);
-			PushVertex(position, 0, 0, 0);
+			PushVertex(position, 0, 1, 0);
 
 			SetSetUV(uvRect.x, uvRect.height);
-			PushVertex(position, 0, 0, 1);
+			PushVertex(position, 0, 0, 0);
 
 			SetSetUV(uvRect.width, uvRect.height);
-			PushVertex(position, 0, 1, 1);
+			PushVertex(position, 0, 0, 1);
 
 			SetSetUV(uvRect.width, uvRect.y);
+			PushVertex(position, 0, 1, 1);
+
+			SetSetUV(uvRect.x, uvRect.y);
 			PushVertex(position, 0, 1, 0);
 		}
 
