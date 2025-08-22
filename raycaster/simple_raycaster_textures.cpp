@@ -8,7 +8,7 @@
 *   raylib-extras are licensed under an unmodified zlib/libpng license, which is an OSI-certified,
 *   BSD-like license that allows static linking with closed source software:
 *
-*   Copyright (c) 2022 Jeffery Myers (jeffm)
+*   Copyright (c) 2025 Jeffery Myers (jeffm)
 *
 *   This software is provided "as-is", without any express or implied warranty. In no event
 *   will the authors be held liable for any damages arising from the use of this software.
@@ -29,10 +29,11 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include <stdint.h>
+#include <cstdint>
+#include <vector>
 
 // the grid of map data
-uint8_t MapData[] = {   4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7,
+uint8_t MapData[] = { 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7,
 						4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0 ,0, 0, 0, 0, 0, 7,
 						4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7,
 						4, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7,
@@ -64,10 +65,23 @@ constexpr uint8_t MapHeight = 24;
 // how big each map grid is in pixels for the top view
 constexpr uint8_t MapPixelSize = 24;
 
+struct MapObject
+{
+	Vector2 Position;
+	float Facing = 0;
+
+	bool IsVissible = false;
+	float Distance = 0; // distance to the player, used to determine visibility
+};
+
+std::vector <MapObject> MapObjects;
+
 RenderTexture MapRenderTexture;	// render texture for the top view
 RenderTexture ViewRenderTexture; // render texture for the 3d view
 
 Texture2D WallTexture = { 0 };
+
+Texture2D SpriteTexture = { 0 };
 
 // 3d view size
 constexpr uint16_t ViewWidth = 256 * 4;
@@ -300,6 +314,14 @@ void DrawMapTopView()
 	DrawLine(MapPixelSize / 4, MapPixelSize / 4, MapPixelSize, MapPixelSize / 4, RED);
 	DrawLine(MapPixelSize / 4, MapPixelSize / 4, MapPixelSize / 4, MapPixelSize, GREEN);
 
+	// draw objects
+	for (const MapObject& obj : MapObjects)
+	{
+		Vector2 objPixelSpace = Vector2Scale(obj.Position, MapPixelSize);
+		DrawCircleV(objPixelSpace, MapPixelSize * 0.25f, obj.IsVissible ? YELLOW : DARKBLUE);
+		DrawLineV(objPixelSpace, Vector2Add(objPixelSpace, Vector2Scale(Vector2Rotate(Vector2UnitX, obj.Facing), MapPixelSize * 0.5f)), ORANGE);
+	}
+
 	EndTextureMode();
 }
 
@@ -325,6 +347,61 @@ float GetRayU(const RayResult& ray)
 
 	return 0;
 }
+
+
+void DrawObjects()
+{
+	float invDet = 1.0f / (CameraPlane.x * PlayerFacing.y - PlayerFacing.x * CameraPlane.y); //required for correct matrix multiplication
+	for (MapObject& obj : MapObjects)
+	{
+		if (!obj.IsVissible)
+			continue;
+
+		Vector2 relativePos = Vector2Subtract(obj.Position, PlayerPos);
+
+		float transformX = invDet * (PlayerFacing.y * relativePos.x - PlayerFacing.x * relativePos.y);
+		float transformY = invDet * (-CameraPlane.y * relativePos.x + CameraPlane.x * relativePos.y); //this is actually the depth inside the screen, that what Z is in 3D
+
+		int spriteScreenX = int((ViewWidth / 2) * (1 + transformX / transformY));
+
+		int spriteHeight = abs(int(ViewRenderTexture.texture.height / (transformY))); //using 'transformY' instead of the real distance prevents fisheye
+
+		//calculate lowest and highest pixel to fill in current stripe
+		int drawStartY = -spriteHeight / 2 + ViewRenderTexture.texture.height / 2;
+		if (drawStartY < 0)
+			drawStartY = 0;
+		int drawEndY = spriteHeight / 2 + ViewRenderTexture.texture.height / 2;
+		if (drawEndY >= ViewRenderTexture.texture.height)
+			drawEndY = ViewRenderTexture.texture.height - 1;
+
+		//calculate width of the sprite
+		int spriteWidth = abs(int(ViewRenderTexture.texture.height / (transformY)));
+		int drawStartX = -spriteWidth / 2 + spriteScreenX;
+		if (drawStartX < 0)
+			drawStartX = 0;
+		int drawEndX = spriteWidth / 2 + spriteScreenX;
+		if (drawEndX >= ViewWidth)
+			drawEndX = ViewWidth - 1;
+
+		//loop through every vertical stripe of the sprite on screen
+		for (int stripe = drawStartX; stripe < drawEndX; stripe++)
+		{
+			int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * SpriteTexture.width / spriteWidth) / 256;
+			//the conditions in the if are:
+			//1) it's in front of camera plane so you don't see things behind you
+			//2) it's on the screen (left)
+			//3) it's on the screen (right)
+			//4) ZBuffer, with perpendicular distance
+			if (transformY > 0 && stripe > 0 && stripe < ViewWidth && transformY < RaySet[stripe].Distance)
+			{
+				Rectangle sourceRect = { float(texX), 0, 1, float(SpriteTexture.height) };
+				Rectangle destRect = { float(stripe), float(drawStartY), 1, float(drawEndY - drawStartY) };
+				DrawTexturePro(SpriteTexture, sourceRect, destRect, Vector2Zeros, 0, WHITE);
+			}
+		}
+	}
+}
+
 
 // draw the 3d view
 void DrawView()
@@ -380,6 +457,8 @@ void DrawView()
 		}
 	}
 
+	DrawObjects();
+
 	EndTextureMode();
 }
 
@@ -399,8 +478,8 @@ void UpdateMovement()
 	if (IsKeyDown(KEY_E))
 		rotation -= rotationSpeed;
 
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
-        rotation -= GetMouseDelta().x / 100.0f;
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+		rotation -= GetMouseDelta().x / 100.0f;
 
 	// rotate the player and the camera plane
 	PlayerFacing = Vector2Rotate(PlayerFacing, rotation);
@@ -430,6 +509,52 @@ void UpdateMovement()
 		PlayerPos = newPos;
 }
 
+void InitObjects()
+{
+	MapObjects.push_back(MapObject{ Vector2{10.5f,8.5f}, 0 });
+
+	MapObjects.push_back(MapObject{ Vector2{12.5f,8.5f}, 0 });
+
+	MapObjects.push_back(MapObject{ Vector2{14.5f,8.5f}, 0 });
+}
+
+void ComputeObjectVisibility()
+{
+	// compute the visibility of each object
+	for (MapObject& obj : MapObjects)
+	{
+		obj.IsVissible = false;
+		// compute the vector to the object
+		Vector2 toObj = Vector2Subtract(obj.Position, PlayerPos);
+		// compute the angle to the object
+		float angleToObj = Vector2Angle(PlayerFacing, toObj);
+		// if the angle is within 45 degrees, then it is visible
+		if (fabsf(angleToObj) < ViewFOV / 2.0f)
+			obj.IsVissible = true;
+
+		if (obj.IsVissible)
+		{
+			// compute the distance to the object
+			obj.Distance = Vector2Distance(PlayerPos, obj.Position);
+
+			if (obj.Distance < 1.0f)
+				obj.IsVissible = false; // don't allow objects to be too close
+		}
+	}
+
+	std::qsort(MapObjects.data(), MapObjects.size(), sizeof(MapObject), [](const void* a, const void* b) -> int
+		{
+			const MapObject* objA = static_cast<const MapObject*>(a);
+			const MapObject* objB = static_cast<const MapObject*>(b);
+			if (objA->Distance < objB->Distance)
+				return 1;
+			else if (objA->Distance > objB->Distance)
+				return -1;
+			else
+				return 0;
+		});
+}
+
 int main()
 {
 	// set up the window
@@ -437,12 +562,16 @@ int main()
 	InitWindow(1800, 900, "Raycaster Example");
 	//SetTargetFPS(500);
 
+	InitObjects();
+
 	// load render textures for the top view and 3d view
 	MapRenderTexture = LoadRenderTexture(MapWidth * MapPixelSize, MapHeight * MapPixelSize);
 	ViewRenderTexture = LoadRenderTexture(ViewWidth, ViewHeight);
 
 	// textures for our walls
 	WallTexture = LoadTexture("resources/textures.png");
+	SpriteTexture = LoadTexture("resources/Sprite.png");
+
 	GenTextureMipmaps(&WallTexture);
 	SetTextureFilter(WallTexture, TEXTURE_FILTER_TRILINEAR);
 
@@ -460,11 +589,15 @@ int main()
 		// this is where the raycasting happens
 		UpdateRayset();
 
+		// figure out what objects may be visible
+		ComputeObjectVisibility();
+
 		// update the top view render texture
 		DrawMapTopView();
 
 		// draw the 3d view to it's low res render texture
 		DrawView();
+
 
 		// Draw the results to the screen
 		BeginDrawing();
