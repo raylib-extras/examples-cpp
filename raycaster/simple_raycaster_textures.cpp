@@ -319,7 +319,7 @@ void DrawMapTopView()
 	{
 		Vector2 objPixelSpace = Vector2Scale(obj.Position, MapPixelSize);
 		DrawCircleV(objPixelSpace, MapPixelSize * 0.25f, obj.IsVissible ? YELLOW : DARKBLUE);
-		DrawLineV(objPixelSpace, Vector2Add(objPixelSpace, Vector2Scale(Vector2Rotate(Vector2UnitX, obj.Facing), MapPixelSize * 0.5f)), ORANGE);
+		DrawLineV(objPixelSpace, Vector2Add(objPixelSpace, Vector2Scale(Vector2Rotate(Vector2UnitX, obj.Facing * DEG2RAD), MapPixelSize * 0.5f)), ORANGE);
 	}
 
 	EndTextureMode();
@@ -348,16 +348,22 @@ float GetRayU(const RayResult& ray)
 	return 0;
 }
 
-
 void DrawObjects()
 {
 	float invDet = 1.0f / (CameraPlane.x * PlayerFacing.y - PlayerFacing.x * CameraPlane.y); //required for correct matrix multiplication
+
+	float frameWidth = SpriteTexture.height;
+
 	for (MapObject& obj : MapObjects)
 	{
 		if (!obj.IsVissible)
 			continue;
 
 		Vector2 relativePos = Vector2Subtract(obj.Position, PlayerPos);
+
+		float relativeAngle = atan2f(relativePos.y, relativePos.x) * RAD2DEG - 45;
+
+        float spriteStartX = frameWidth * floor(fmodf(obj.Facing - relativeAngle, 360.0f) / 90.0f);
 
 		float transformX = invDet * (PlayerFacing.y * relativePos.x - PlayerFacing.x * relativePos.y);
 		float transformY = invDet * (-CameraPlane.y * relativePos.x + CameraPlane.x * relativePos.y); //this is actually the depth inside the screen, that what Z is in 3D
@@ -386,7 +392,7 @@ void DrawObjects()
 		//loop through every vertical stripe of the sprite on screen
 		for (int stripe = drawStartX; stripe < drawEndX; stripe++)
 		{
-			int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * SpriteTexture.width / spriteWidth) / 256;
+			int texX = int(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * frameWidth / spriteWidth) / 256;
 			//the conditions in the if are:
 			//1) it's in front of camera plane so you don't see things behind you
 			//2) it's on the screen (left)
@@ -394,7 +400,7 @@ void DrawObjects()
 			//4) ZBuffer, with perpendicular distance
 			if (transformY > 0 && stripe > 0 && stripe < ViewWidth && transformY < RaySet[stripe].Distance)
 			{
-				Rectangle sourceRect = { float(texX), 0, 1, float(SpriteTexture.height) };
+				Rectangle sourceRect = { float(texX + spriteStartX), 0, 1, float(SpriteTexture.height) };
 				Rectangle destRect = { float(stripe), float(drawStartY), 1, float(drawEndY - drawStartY) };
 				DrawTexturePro(SpriteTexture, sourceRect, destRect, Vector2Zeros, 0, WHITE);
 			}
@@ -511,11 +517,11 @@ void UpdateMovement()
 
 void InitObjects()
 {
-	MapObjects.push_back(MapObject{ Vector2{10.5f,8.5f}, 0 });
+	MapObjects.push_back(MapObject{ Vector2{10.5f,9.5f}, 0 });
 
-	MapObjects.push_back(MapObject{ Vector2{12.5f,8.5f}, 0 });
+	MapObjects.push_back(MapObject{ Vector2{12.5f,3.0f}, 180 });
 
-	MapObjects.push_back(MapObject{ Vector2{14.5f,8.5f}, 0 });
+	MapObjects.push_back(MapObject{ Vector2{10.5f,4.0f}, 90 });
 }
 
 void ComputeObjectVisibility()
@@ -523,6 +529,9 @@ void ComputeObjectVisibility()
 	// compute the visibility of each object
 	for (MapObject& obj : MapObjects)
 	{
+        obj.Position.x += sinf(GetTime()) * GetFrameTime();
+        obj.Position.y += cos(GetTime()) * GetFrameTime();
+
 		obj.IsVissible = false;
 		// compute the vector to the object
 		Vector2 toObj = Vector2Subtract(obj.Position, PlayerPos);
