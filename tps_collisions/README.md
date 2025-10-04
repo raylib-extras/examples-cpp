@@ -1,4 +1,4 @@
-# fps collsion example
+# TPS collsion example
 A very simple demo that shows a simple version of Third Person Shooter style collisions.
 
 The world is made of obstacles that are transformed in 3d space. Collisions are done on the axis alligned bounding box (AABB) for each object.
