@@ -64,7 +64,7 @@ bool Obstacle::CollideWithPlayer(Vector3& newPosition, Vector3 oldPosition, floa
     return hit;
 }
 
-bool Obstacle::CheckRaycast(Ray worldRay, RayCollision & collision)
+bool Obstacle::CheckRaycast(Ray worldRay, RayCollision & collision, float radius)
 {
     // transform the ray into local space
     Matrix objectMatrix = Transform.GetWorldMatrix();
@@ -74,8 +74,7 @@ bool Obstacle::CheckRaycast(Ray worldRay, RayCollision & collision)
     localRay.direction = Vector3Subtract(localRay.direction, localRay.position);
 
     // see if the local space ray hits our bounding box
-    collision = GetRayCollisionBox(localRay, Bounds);
-
+    collision = GetRayCollisionBox(localRay, Bounds + radius);
 
     // transform the hit point and normal back into world space
     if (collision.hit)
@@ -183,7 +182,7 @@ bool Map::CollidePlayer(Vector3& newPosition, Vector3 oldPosition, float radius,
     return hitSomething;
 }
 
-bool Map::CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle* hitObstacle)
+bool Map::CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle* hitObstacle, float radius)
 {
     RayCollision collision = { 0 };
 
@@ -192,7 +191,7 @@ bool Map::CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle*
 
     for (auto& wall : Walls)
     {
-        if (wall.CheckRaycast(worldspaceRay, collision))
+        if (wall.CheckRaycast(worldspaceRay, collision, radius))
         {
             if (collision.distance < outputCollision.distance)
             {
@@ -203,7 +202,7 @@ bool Map::CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle*
         }
     }
 
-    RayCollision floorHit = GetRayCollisionBox(worldspaceRay, BoundingBox{ Vector3{-1000,-1,-1000}, Vector3{1000,0,1000} });
+    RayCollision floorHit = GetRayCollisionBox(worldspaceRay, BoundingBox{ Vector3{-1000,-1,-1000}, Vector3{1000, radius,1000} });
     if (floorHit.hit && !outputCollision.hit)
     {
         outputCollision = floorHit;

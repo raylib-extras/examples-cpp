@@ -166,7 +166,7 @@ void PlayerInfo::Update(Map& map)
 
     LastCameraCollision = { 0 };
 
-    map.CollideRay(camRay, LastCameraCollision, nullptr);
+    map.CollideRay(camRay, LastCameraCollision, nullptr, 0.25f);
 
     if (LastCameraCollision.hit)
     {

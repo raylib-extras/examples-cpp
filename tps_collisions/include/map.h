@@ -33,6 +33,16 @@
 #include <vector>
 #include <deque>
 
+inline BoundingBox operator + (const BoundingBox& lhs, const Vector3& rhs)
+{
+    return BoundingBox{ lhs.min - rhs, lhs.max + rhs };
+}
+
+inline BoundingBox operator + (const BoundingBox& lhs, const float& rhs)
+{
+    return BoundingBox{ lhs.min - Vector3{rhs,rhs,rhs}, lhs.max + Vector3{rhs, rhs,rhs} };
+}
+
 class Obstacle
 {
 public:
@@ -50,7 +60,7 @@ public:
     Obstacle(float x, float z, float width, float height, float depth, float angle);
     bool CollideWithPlayer(Vector3& newPosition, Vector3 oldPosition, float radius, float height);
 
-    bool CheckRaycast(Ray worldRay, RayCollision& collision);
+    bool CheckRaycast(Ray worldRay, RayCollision& collision, float radius = 0);
 };
 
 struct Explosion
@@ -76,7 +86,7 @@ public:
     void Cleanup();
 
     bool CollidePlayer(Vector3& newPosition, Vector3 oldPosition, float radius, float height);
-    bool CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle* hitObstacle = nullptr);
+    bool CollideRay(Ray worldspaceRay, RayCollision& outputCollision, Obstacle* hitObstacle = nullptr, float radius = 0);
 
     void Draw(Camera3D& view);
     void DrawWalls(Camera3D& view);
