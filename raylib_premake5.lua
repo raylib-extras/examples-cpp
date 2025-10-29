@@ -17,6 +17,9 @@ function platform_defines()
     filter {"system:macosx"}
         disablewarnings {"deprecated-declarations"}
 
+    filter "system:linux"
+      defines{"_GLFW_X11"}
+
     filter{}
 end
 
