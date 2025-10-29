@@ -150,3 +150,7 @@ Release
 box2d-main
 raylib-master
 *.sln
+/arpg_camera/Makefile
+/arpg_camera/_build/*.make
+Makefile
+*.make

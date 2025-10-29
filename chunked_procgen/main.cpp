@@ -60,9 +60,9 @@ int main()
     {
         for (auto& [chunkOrigin, chunkInfo] : loop.Chunks)
         {
-			auto& chunkInfo = ChunkTextureCache.emplace_back();
-            chunkInfo.BaseLayer = LoadRenderTexture(256, 256);
-			SetTextureWrap(chunkInfo.BaseLayer.texture, TEXTURE_WRAP_CLAMP);
+			auto& cachedChunkTexture = ChunkTextureCache.emplace_back();
+			cachedChunkTexture.BaseLayer = LoadRenderTexture(256, 256);
+			SetTextureWrap(cachedChunkTexture.BaseLayer.texture, TEXTURE_WRAP_CLAMP);
         }
     }
 
