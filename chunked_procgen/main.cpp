@@ -58,7 +58,7 @@ int main()
 
     for (auto& loop : renderArea.Area.Loops)
     {
-        for (auto& [chunkOrigin, chunkInfo] : loop.Chunks)
+        for (auto& [chunkOrigin, _chunkInfo] : loop.Chunks)
         {
 			auto& chunkInfo = ChunkTextureCache.emplace_back();
             chunkInfo.BaseLayer = LoadRenderTexture(256, 256);

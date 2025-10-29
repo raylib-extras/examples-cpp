@@ -31,6 +31,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <algorithm>
 
 // the grid of map data
 uint8_t MapData[] = { 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7,

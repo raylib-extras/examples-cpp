@@ -31,6 +31,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <algorithm>
 #include <vector>
 #include <list>
 

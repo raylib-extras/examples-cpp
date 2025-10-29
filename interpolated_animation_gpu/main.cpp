@@ -35,6 +35,7 @@
 #include "rlights.h"
 
 #include <vector>
+#include <cstring>
 
 
 // utility functions
@@ -58,7 +59,7 @@ public:
 
     std::vector<int> ShaderBoneLocations;
 
-    void Setup(Shader& shader)
+    void Setup(Shader shader)
     {
         BaseShader = shader;
 
