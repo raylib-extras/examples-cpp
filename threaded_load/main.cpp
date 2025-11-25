@@ -41,7 +41,8 @@ void LoadTextureInThread()
 			break;
 
 		// load perlin noise images and rescale them so they take some time
-		Image perlin = GenImagePerlinNoise(1024, 1024, i*16, i*34, i/(TextureCount /3.0f));
+		Image perlin = GenImagePerlinNoise(1024, 1024, i*16, i*34, i/(TextureCount / 3.0f));
+		ImageColorTint(&perlin, Color{ (unsigned char)GetRandomValue(128,255), (unsigned char)GetRandomValue(128,255) ,(unsigned char)GetRandomValue(128,255) , 255 });
 		ImageResize(&perlin, 128, 128);
 
         auto texture = LoadTextureFromImage(perlin);
