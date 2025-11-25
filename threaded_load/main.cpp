@@ -19,6 +19,7 @@ by Jeffery Myers is marked with CC0 1.0. To view a copy of this license, visit h
 #include "GLFW/glfw3.h"
 
 
+
 std::mutex TextureLocker;
 std::atomic<bool> LoadComplete;
 std::atomic<bool> Abort;
@@ -43,9 +44,12 @@ void LoadTextureInThread()
 		Image perlin = GenImagePerlinNoise(1024, 1024, i*16, i*34, i/(TextureCount /3.0f));
 		ImageResize(&perlin, 128, 128);
 
+        auto texture = LoadTextureFromImage(perlin);
+        glFlush();
+
 		{
 			std::lock_guard<std::mutex> guard(TextureLocker);
-			Textures.push_back(LoadTextureFromImage(perlin));
+			Textures.push_back(texture);
 		}
 
 		UnloadImage(perlin);
@@ -122,12 +126,12 @@ int main ()
 					throberDir *= -1;
 				}
 
-				DrawCircle(throberPos, 100, 20, RED);
+				DrawCircle(throberPos, 80, 20, RED);
 			}
-			else
+			//else
 			{
 				int x = 0;
-				int y = 40;
+				int y = 140;
 				for (auto& tx : Textures)
 				{
 					DrawTexture(tx, x, y, WHITE);
