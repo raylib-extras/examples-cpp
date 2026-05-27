@@ -154,3 +154,4 @@ raylib-master
 /arpg_camera/_build/*.make
 Makefile
 *.make
+*.slnx
